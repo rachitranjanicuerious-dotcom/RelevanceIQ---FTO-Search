@@ -183,7 +183,7 @@ if st.session_state.analysis_started:
             )
 
             snapshot = workflow.get_state(config)
-            st.write(snapshot.values)
+            # st.write(snapshot.values)
 
             print("Next:", snapshot.next)
             print("Interrupts:", snapshot.interrupts)
