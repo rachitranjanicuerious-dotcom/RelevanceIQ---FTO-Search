@@ -1,23 +1,47 @@
 import streamlit as st
 import sqlite3
+import uuid
+from langgraph.types import Command
 import pandas as pd
 
 # TEST_MODE = True
 
-from graph_3_node import workflow
-
+from graph import workflow
 from database import create_table, save_result
 
 st.set_page_config(
     page_title="RelevanceIQ",
-    page_icon=" ",
+    page_icon="Icon.png",
     layout="centered"
 )
 
 st.title("RelevanceIQ")
-st.subheader("Patent Relevance Analysis")
+st.subheader("Patent Relevance Analysis with Primary and Secondary Ingredients")
 
 create_table()
+
+# Session State
+# -----------------------------
+if "analysis_started" not in st.session_state:
+    st.session_state.analysis_started = False
+
+if "df" not in st.session_state:
+    st.session_state.df = None
+
+if "current_index" not in st.session_state:
+    st.session_state.current_index = 0
+
+if "results" not in st.session_state:
+    st.session_state.results = []
+
+if "product_description" not in st.session_state:
+    st.session_state.product_description = ""
+
+if "relevance_framework" not in st.session_state:
+    st.session_state.relevance_framework = ""
+
+#-----------------------------
+## Inputs 
 
 product_description = st.text_area(
     "Enter Product Description",
@@ -40,97 +64,268 @@ if run:
 
     if uploaded_file is None:
         st.warning("Please upload an Excel file.")
+        st.stop()
 
-    elif not product_description.strip():
+    if not product_description.strip():
         st.warning("Please enter the product description.")
+        st.stop()
 
-    elif not relevance_framework.strip():
+    if not relevance_framework.strip():
         st.warning("Please provide the relevance framework.")
+        st.stop()
 
 
-    else:
-      
-        df = pd.read_excel(uploaded_file)
-        results = []
-        progress_bar = st.progress(0)
+    st.session_state.df = pd.read_excel(uploaded_file)
 
-        status = st.empty()
+    st.session_state.product_description = product_description
+    st.session_state.relevance_framework = relevance_framework
 
-        total_patents = len(df)
+    st.session_state.results = []
+    st.session_state.current_index = 0
+    st.session_state.analysis_started = True
 
-        for index, row in df.iterrows():
+    st.session_state.session_id = str(uuid.uuid4())
 
-            status.write(
-                 f"Processing Patent {index + 1} of {total_patents}"
-            )
+    st.rerun()
 
-            state = {
-                "product_description" : product_description,
-                "publication_number"  : row["Publication Number"],
-                "title"               : row["title"],
-                "abstract"            : row["Abstract"],
-                "independent_claim"   : row["Independent Claim"],
-                "all_claims"          : row["All Claims"],
-                "relevance_framework" : relevance_framework, 
-                "product_features"     : [],
-                "patent_features"     : [],
-                "comparison"          : [],
-                "relevance"           : " ",
-                "rationale"           : " ",
-                "confidence"          : 0
+# Process one patent at a time
+# ----------------------------------------------------
 
-            }
-            print(state)
-            
-            result = workflow.invoke(state)
+if st.session_state.analysis_started:
 
-            save_result(result)
+    df = st.session_state.df
+    index = st.session_state.current_index
 
-            print("Workflow completed for:", result["publication_number"])
-
-            results.append({
-                "Publication Number"  : result["publication_number"],
-                "Title": result["title"],
-                "Relevance": result["relevance"],
-                "Confidence": result["confidence"],
-                "Rationale": result["rationale"]
-                
-            })
-
-            progress_bar.progress(
-            (index + 1) / total_patents
-            )
-
-        status.empty()
-
+    # Finished all patents
+    # -----------------------------
+    if index >= len(df):
+        
         st.success("Analysis Completed Successfully!")
 
-        result_df = pd.DataFrame(results)
+        result_df = pd.DataFrame(st.session_state.results)
 
         st.dataframe(
             result_df,
-            use_container_width = True
+            use_container_width=True
         )
 
         st.download_button(
-            label = "Download Results",
-            data = result_df.to_csv(index = False),
-            file_name = 'RelevanceIQ_Results.csv',
-            mime      = "text/csv"
+            "Download Results",
+            result_df.to_csv(index=False),
+            "RelevanceIQ_Results.csv",
+            "text/csv"
         )
+
+    else:
+
+        progress_bar = st.progress(index / len(df))
+
+        status = st.empty()
+
+        status.write(
+            f"Processing Patent {index + 1} of {len(df)}"
+        )
+
+        row = df.iloc[index]
+
+        config = {
+            "configurable": {
+                "thread_id":   f"{st.session_state.session_id}_patent_{index}"
+            }
+        }
+
+        # Get current graph state
+        snapshot = workflow.get_state(config)
+
+        # First execution for this patent
+        if not snapshot or not snapshot.values:
+            state = {
+
+                "product_description": st.session_state.product_description,
+
+                "publication_number": row["Publication Number"],
+
+                "title": row["title"],
+
+                "abstract": row["Abstract"],
+
+                "independent_claim": row["Independent Claim"],
+
+                "all_claims": row["All Claims"],
+
+                "relevance_framework": st.session_state.relevance_framework,
+
+                # "product_features": [],
+                "primary_product_features": [],
+                "secondary_product_features": [],
+
+                # "patent_features": [],
+                "primary_patent_features": [],
+                "secondary_patent_features": [],
+
+                "comparison": [],
+
+                "relevance": "",
+
+                "confidence": 0,
+
+                "rationale": "",
+
+                "relevance_framework_only": "",
+
+                "confidence_framework_only": 0,
+
+                "rationale_framework_only": "",
+
+                "review_type": ""
+
+            }
+
+            workflow.invoke(
+                state,
+                config=config
+            )
+
+            snapshot = workflow.get_state(config)
+            # st.write(snapshot.values)
+
+            print("Next:", snapshot.next)
+            print("Interrupts:", snapshot.interrupts)
+
+            if snapshot.interrupts:
+                print(snapshot.interrupts[0].value)
+
+
+        # Waiting for human review
+        # if snapshot.next:
+        if snapshot.interrupts:    
+
+            review = snapshot.interrupts[0].value
+
+            st.info(
+                f"Review the extracted {review['review_type']} features"
+            )
+
+            # edited = st.text_area(
+
+            #     "Edit Features",
+
+            #     value="\n".join(review["features"]),
+
+            #     height=250,
+
+            #    key=f"review_{index}_{review['review_type']}"
+
+            # )
+
+            st.subheader("Primary Features")
+
+            edited_primary = st.text_area(
+                "Primary Features",
+                value="\n".join(review["primary_features"]),
+                height=200,
+                key=f"primary_{index}_{review['review_type']}"
+            )
+
+            st.subheader("Secondary Features")
+
+            edited_secondary = st.text_area(
+                "Secondary Features",
+                value="\n".join(review["secondary_features"]),
+                height=200,
+                key=f"secondary_{index}_{review['review_type']}"
+            )
+
+            if st.button(
+                "Approve & Continue",
+                key= f"approve_{index}_{review['review_type']}"
+            ):
+
+                approved_features = {
+                    "primary_features": [
+                        x.strip()
+                        for x in edited_primary.split("\n")
+                        if x.strip()
+                    ],
+                    "secondary_features": [
+                        x.strip()
+                        for x in edited_secondary.split("\n")
+                        if x.strip()
+                    ]
+                }
+
+                workflow.invoke(
+                    Command(
+                        resume= approved_features
+                    ),
+
+                    config=config
+
+                )
+
+                st.rerun()
+
+
+        elif snapshot.next:       # Added 
+
+            st.info("Continuing workflow...")
+            st.rerun()        
+        # Workflow finished
+        # ---------------------------------------
+        else:
+
+            result = snapshot.values
+
+            save_result(result)
+
+            st.session_state.results.append({
+
+                "Publication Number": result["publication_number"],
+
+                "Title": result["title"],
+
+                "Relevance": result["relevance"],
+
+                "Confidence": result["confidence"],
+
+                "Rationale": result["rationale"],
+
+                "Relevance_Framework_Only": result["relevance_framework_only"],
+                
+                "Confidence_Framework_Only": result["confidence_framework_only"],
+
+                "Rationale_Framework_Only": result["rationale_framework_only"]
+
+            })
+
+            progress_bar.progress(
+                (index + 1) / len(df)
+            )
+
+            st.session_state.current_index += 1
+
+            st.rerun()
+            
+# --------------------------------------------------
+# View Database
+# --------------------------------------------------
+
+st.divider()
 
 if st.button("View Database"):
 
     conn = sqlite3.connect("RelevanceIQ.db")
 
-    df = pd.read_sql_query(
-        "SELECT * FROM patent_results",
+    database_df = pd.read_sql_query(
+
+        "SELECT * FROM patent_match_relevance_results ORDER BY id DESC",
         conn
+
     )
 
     conn.close()
 
-    st.dataframe(df, use_container_width=True)
-
-
-            
+    st.dataframe(
+        database_df,
+        use_container_width=True
+    )

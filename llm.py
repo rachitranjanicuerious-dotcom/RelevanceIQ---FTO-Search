@@ -23,12 +23,14 @@ hf_endpoint = HuggingFaceEndpoint(
     max_new_tokens=4096
 )
 
-huggingface_llm = ChatHuggingFace(
-    llm=hf_endpoint
-)
+# huggingface_llm = ChatHuggingFace(
+#     llm=hf_endpoint
+# )
 
 # Select the model to use
 
-# llm = openai_llm
+llm = openai_llm
 
-llm = huggingface_llm
+
+
+# llm = huggingface_llm

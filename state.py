@@ -11,10 +11,17 @@ class RelevanceState(TypedDict) :
     independent_claim : str
     all_claims    : str
 
-    # Extracted features
-    product_features : list[str]
-    patent_features : list[str]
+    # Extracted primary and secondary features
+    primary_product_features : list[str]
+    secondary_product_features : list[str]
 
+    
+    primary_patent_features : list[str]
+    secondary_patent_features : list[str]
+
+    # Extracted features
+    # product_features : list[str]
+    # patent_features : list[str]
 
     # User-provided framework
     relevance_framework : str
