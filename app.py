@@ -3,10 +3,11 @@ import sqlite3
 import uuid
 from langgraph.types import Command
 import pandas as pd
+from node import llm, feature_parser
 
 # TEST_MODE = True
-
 from graph import workflow
+from node import extract_product_features
 from database import create_table, save_result
 
 st.set_page_config(
@@ -16,7 +17,7 @@ st.set_page_config(
 )
 
 st.title("RelevanceIQ")
-st.subheader("Patent Relevance Analysis with Primary and Secondary Ingredients")
+st.subheader("Patent Relevance Analysis")
 
 create_table()
 
@@ -39,6 +40,15 @@ if "product_description" not in st.session_state:
 
 if "relevance_framework" not in st.session_state:
     st.session_state.relevance_framework = ""
+
+if "primary_product_features" not in st.session_state:
+    st.session_state.primary_product_features = []   
+
+if "secondary_product_features" not in st.session_state:
+    st.session_state.secondary_product_features = []
+
+if "product_features_approved" not in st.session_state:
+    st.session_state.product_features_approved = False
 
 #-----------------------------
 ## Inputs 
@@ -74,19 +84,127 @@ if run:
         st.warning("Please provide the relevance framework.")
         st.stop()
 
-
     st.session_state.df = pd.read_excel(uploaded_file)
-
     st.session_state.product_description = product_description
     st.session_state.relevance_framework = relevance_framework
 
     st.session_state.results = []
     st.session_state.current_index = 0
+
+    st.session_state.primary_product_features = []
+    st.session_state.secondary_product_features = []
+    st.session_state.product_features_approved = False
+
     st.session_state.analysis_started = True
 
     st.session_state.session_id = str(uuid.uuid4())
 
     st.rerun()
+
+# ----------------------------------------------------
+# EXTRACT PRODUCT FEATURES ONCE
+# ----------------------------------------------------
+
+if (
+    st.session_state.analysis_started
+    and not st.session_state.product_features_approved
+):
+
+    # First extraction
+    if not st.session_state.primary_product_features and not st.session_state.secondary_product_features:
+
+        st.info("Extracting product features for review...")
+
+        product_prompt = f"""
+You are an experienced patent analyst.
+
+Extract only the technical features from the product description.
+
+Classify every extracted feature into either PRIMARY or SECONDARY.
+
+PRIMARY FEATURES:
+- Features central to the product's main technical function.
+- Features that directly perform the core technical operation.
+- Features that are important to the core technical concept.
+
+SECONDARY FEATURES:
+- Supporting or auxiliary features.
+- Features that are not central to the main technical operation.
+
+Rules:
+- Do not invent features which are not explicitly mentioned.
+- One feature per list item.
+- Keep each feature concise.
+- Preserve technical terminology.
+
+{feature_parser.get_format_instructions()}
+
+Product Description:
+{st.session_state.product_description}
+"""
+
+        from langchain_core.messages import HumanMessage
+        from node import llm, feature_parser
+
+        response = llm.invoke(
+            [HumanMessage(content=product_prompt)]
+        )
+
+        result = feature_parser.parse(response.content)
+
+        st.session_state.primary_product_features = (
+            result.primary_features
+        )
+
+        st.session_state.secondary_product_features = (
+            result.secondary_features
+        )
+
+        st.rerun()
+
+    # Human approval
+    st.subheader("Review Product Features")
+
+    edited_primary = st.text_area(
+        "Primary Product Features",
+        value="\n".join(
+            st.session_state.primary_product_features
+        ),
+        height=250,
+        key="product_primary_review"
+    )
+
+    edited_secondary = st.text_area(
+        "Secondary Product Features",
+        value="\n".join(
+            st.session_state.secondary_product_features
+        ),
+        height=150,
+        key="product_secondary_review"
+    )
+
+    if st.button(
+        "Approve Product Features",
+        key="approve_product_features"
+    ):
+
+        st.session_state.primary_product_features = [
+            x.strip()
+            for x in edited_primary.split("\n")
+            if x.strip()
+        ]
+
+        st.session_state.secondary_product_features = [
+            x.strip()
+            for x in edited_secondary.split("\n")
+            if x.strip()
+        ]
+
+        st.session_state.product_features_approved = True
+
+        st.rerun()
+
+    st.stop()    
 
 # Process one patent at a time
 # ----------------------------------------------------
@@ -144,39 +262,26 @@ if st.session_state.analysis_started:
                 "product_description": st.session_state.product_description,
 
                 "publication_number": row["Publication Number"],
-
                 "title": row["title"],
-
                 "abstract": row["Abstract"],
-
                 "independent_claim": row["Independent Claim"],
-
                 "all_claims": row["All Claims"],
-
                 "relevance_framework": st.session_state.relevance_framework,
-
                 # "product_features": [],
-                "primary_product_features": [],
-                "secondary_product_features": [],
-
+                "primary_product_features": st.session_state.primary_product_features,
+                "secondary_product_features":  st.session_state.secondary_product_features,
                 # "patent_features": [],
                 "primary_patent_features": [],
                 "secondary_patent_features": [],
-
                 "comparison": [],
 
                 "relevance": "",
 
                 "confidence": 0,
-
                 "rationale": "",
-
                 "relevance_framework_only": "",
-
                 "confidence_framework_only": 0,
-
                 "rationale_framework_only": "",
-
                 "review_type": ""
 
             }
@@ -195,8 +300,6 @@ if st.session_state.analysis_started:
             if snapshot.interrupts:
                 print(snapshot.interrupts[0].value)
 
-
-        # Waiting for human review
         # if snapshot.next:
         if snapshot.interrupts:    
 
@@ -205,18 +308,6 @@ if st.session_state.analysis_started:
             st.info(
                 f"Review the extracted {review['review_type']} features"
             )
-
-            # edited = st.text_area(
-
-            #     "Edit Features",
-
-            #     value="\n".join(review["features"]),
-
-            #     height=250,
-
-            #    key=f"review_{index}_{review['review_type']}"
-
-            # )
 
             st.subheader("Primary Features")
 

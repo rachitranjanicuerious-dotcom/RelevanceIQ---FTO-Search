@@ -3,7 +3,7 @@ from langgraph.checkpoint.memory import InMemorySaver
 from state import RelevanceState
 
 from node import(
-    extract_product_features,
+    # extract_product_features,
     extract_patent_features,
     final_analysis
 )
@@ -12,10 +12,10 @@ from node import(
 graph = StateGraph(RelevanceState)
 
 # Nodes
-graph.add_node(
-    "Extract Product Features",
-     extract_product_features
-)
+# graph.add_node(
+#     "Extract Product Features",
+#      extract_product_features
+# )
 
 graph.add_node(
     "Extract Patent Features",
@@ -29,13 +29,14 @@ graph.add_node(
 
 graph.add_edge(
     START,
-    "Extract Product Features"
+    "Extract Patent Features"
+    # "Extract Product Features"
 )
 
-graph.add_edge(
-    "Extract Product Features",
-    "Extract Patent Features"
-)
+# graph.add_edge(
+#     # "Extract Product Features",
+#     "Extract Patent Features"
+# )
 
 graph.add_edge(
     "Extract Patent Features",

@@ -11,6 +11,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 openai_llm = ChatOpenAI(
     model="gpt-5",
     temperature=0,
+    seed=42,
     api_key=OPENAI_API_KEY
 )
 
@@ -20,6 +21,7 @@ hf_endpoint = HuggingFaceEndpoint(
     repo_id="meta-llama/Llama-3.1-8B-Instruct",
     huggingfacehub_api_token=HF_TOKEN,
     temperature=0,
+    seed=42,
     max_new_tokens=4096
 )
 
@@ -28,9 +30,6 @@ hf_endpoint = HuggingFaceEndpoint(
 # )
 
 # Select the model to use
-
 llm = openai_llm
-
-
 
 # llm = huggingface_llm

@@ -41,12 +41,11 @@ Rules
 - Preserve technical terminology.
 
 {feature_parser.get_format_instructions()}
-Product Description
+Product Descriptions
 
 {state["product_description"]}
 
 """
-
     start = time.time()
 
     response = llm.invoke(
@@ -59,17 +58,12 @@ Product Description
 
     print("=" * 80)
     result = feature_parser.parse(response.content)
-    # state["product_features"] = result.features
-    # return state
     state["primary_product_features"] = result.primary_features
     state["secondary_product_features"] = result.secondary_features
-
     state["review_type"] = "product"
-
     approved = interrupt(
         {
             "review_type": "product",
-            # "features": result.features
             "primary_features": result.primary_features,
             "secondary_features": result.secondary_features
         }
@@ -127,13 +121,11 @@ All Claims:
 """
 
     start = time.time()
-
     response = llm.invoke(
         [HumanMessage(content=prompt)]
     )
 
     print('Patent feature extraction duration:' , time.time() - start)
-
     try:
 
         result = feature_parser.parse(response.content)
@@ -162,7 +154,6 @@ All Claims:
     approved = interrupt(
         {
             "review_type": "patent",
-
             "publication_number":
                 state["publication_number"],
 
