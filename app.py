@@ -116,28 +116,29 @@ if (
         st.info("Extracting product features for review...")
 
         product_prompt = f"""
-You are an experienced patent analyst.
+You are an experienced patent analyst performing an FTO
+(Freedom-to-Operate) technical analysis.
 
-Extract only the technical features from the product description.
-
-Classify every extracted feature into either PRIMARY or SECONDARY.
+Extract the technical features explicitly disclosed in the
+product description.
 
 PRIMARY FEATURES:
-- Features central to the product's main technical function.
-- Features that directly perform the core technical operation.
-- Features that are important to the core technical concept.
+- Core technical features and mechanisms.
+- Features important for satisfying potential patent claim
+  limitations.
 
 SECONDARY FEATURES:
-- Supporting or auxiliary features.
-- Features that are not central to the main technical operation.
+- Supporting, auxiliary, optional, control, communication,
+  interface, or peripheral features.
 
 Rules:
-- Do not invent features which are not explicitly mentioned.
-- One feature per list item.
-- Keep each feature concise.
-- Preserve technical terminology.
+- Extract only explicitly disclosed features.
+- Do not infer or invent features.
+- Keep features concise and technically specific.
+# - One feature per list item.
 
 {feature_parser.get_format_instructions()}
+
 
 Product Description:
 {st.session_state.product_description}
@@ -274,9 +275,7 @@ if st.session_state.analysis_started:
                 "primary_patent_features": [],
                 "secondary_patent_features": [],
                 "comparison": [],
-
                 "relevance": "",
-
                 "confidence": 0,
                 "rationale": "",
                 "relevance_framework_only": "",
@@ -301,60 +300,57 @@ if st.session_state.analysis_started:
                 print(snapshot.interrupts[0].value)
 
         # if snapshot.next:
-        if snapshot.interrupts:    
+        if snapshot.interrupts:
 
             review = snapshot.interrupts[0].value
 
-            st.info(
-                f"Review the extracted {review['review_type']} features"
-            )
+            # The only expected interrupt is product feature approval
+            if review["review_type"] == "product":
 
-            st.subheader("Primary Features")
+                st.info("Review the extracted product features")
 
-            edited_primary = st.text_area(
-                "Primary Features",
-                value="\n".join(review["primary_features"]),
-                height=200,
-                key=f"primary_{index}_{review['review_type']}"
-            )
+                st.subheader("Primary Product Features")
 
-            st.subheader("Secondary Features")
-
-            edited_secondary = st.text_area(
-                "Secondary Features",
-                value="\n".join(review["secondary_features"]),
-                height=200,
-                key=f"secondary_{index}_{review['review_type']}"
-            )
-
-            if st.button(
-                "Approve & Continue",
-                key= f"approve_{index}_{review['review_type']}"
-            ):
-
-                approved_features = {
-                    "primary_features": [
-                        x.strip()
-                        for x in edited_primary.split("\n")
-                        if x.strip()
-                    ],
-                    "secondary_features": [
-                        x.strip()
-                        for x in edited_secondary.split("\n")
-                        if x.strip()
-                    ]
-                }
-
-                workflow.invoke(
-                    Command(
-                        resume= approved_features
-                    ),
-
-                    config=config
-
+                edited_primary = st.text_area(
+                    "Primary Product Features",
+                    value="\n".join(review["primary_features"]),
+                    height=200,
+                    key=f"primary_{index}_product"
                 )
 
-                st.rerun()
+                st.subheader("Secondary Product Features")
+
+                edited_secondary = st.text_area(
+                    "Secondary Product Features",
+                    value="\n".join(review["secondary_features"]),
+                    height=200,
+                    key=f"secondary_{index}_product"
+                )
+
+                if st.button(
+                    "Approve Product Features",
+                    key=f"approve_{index}_product"
+                ):
+
+                    approved_features = {
+                        "primary_features": [
+                            x.strip()
+                            for x in edited_primary.split("\n")
+                            if x.strip()
+                        ],
+                        "secondary_features": [
+                            x.strip()
+                            for x in edited_secondary.split("\n")
+                            if x.strip()
+                        ]
+                    }
+
+                    workflow.invoke(
+                        Command(resume=approved_features),
+                        config=config
+                    )
+
+                    st.rerun()
 
 
         elif snapshot.next:       # Added 
@@ -374,6 +370,10 @@ if st.session_state.analysis_started:
                 "Publication Number": result["publication_number"],
 
                 "Title": result["title"],
+
+                "Patent Primary Features": result["primary_patent_features"],
+                "Patent Secondary Features": result["secondary_patent_features"],
+
 
                 "Relevance": result["relevance"],
 
@@ -409,7 +409,7 @@ if st.button("View Database"):
 
     database_df = pd.read_sql_query(
 
-        "SELECT * FROM patent_match_relevance_results ORDER BY id DESC",
+        "SELECT * FROM patent_FTO_relevance_results ORDER BY id DESC",
         conn
 
     )
