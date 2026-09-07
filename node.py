@@ -114,7 +114,7 @@ Rules:
 - Do not convert abstract/specification disclosure into claim
   limitations.
 - Keep features concise.
--e feature per list item.
+- One feature per list item.
 
 {feature_parser.get_format_instructions()}
 
@@ -191,7 +191,7 @@ class DetailedAnalysisOutput(BaseModel):
     confidence: int = Field(ge=0, le=100)
 
 class FrameworkOnlyOutput(BaseModel):
-    relevance_framework_only: Literal["H", "M+", "L"]
+    relevance_framework_only: Literal["H", "M+", "L", "NR"]
     rationale_framework_only: str
     confidence_framework_only: int = Field(ge=0, le=100)
 
@@ -642,21 +642,19 @@ M+ — RELEVANT
 ------------------------------------------------------------
 
 Assign M+ when there is substantial technical overlap between the
-product and an actual patent claim, but a meaningful material
-distinction prevents the correspondence from being appropriately
-classified as H.
+product and an actual patent claim, but the correspondence is not
+strong enough for H under the applicable relevance standard.
 
-A material distinction may include an important claim limitation that
-the product evidence affirmatively shows is:
-- absent;
-- impossible for the product to satisfy; or
-- dependent on a materially different technical mechanism.
+This may occur when:
+- a meaningful material claim limitation is affirmatively shown to
+  be absent or technically different; or
+- the core functionality substantially overlaps but an important
+  claim limitation remains unresolved and prevents a high-confidence H
+  classification under the applicable relevance standard.
 
-Do NOT assign M+ merely because:
-- a limitation is not mentioned;
-- the product description is incomplete;
-- terminology differs; or
-- a routine implementation detail is uncertain.
+Do NOT assign M+ merely because a limitation is not mentioned.
+
+Do NOT treat uncertainty as confirmed absence.
 
 ------------------------------------------------------------
 L — LESS RELEVANT
@@ -678,7 +676,6 @@ L is appropriate when:
 
 Do not assign L solely because one or more product details are
 undisclosed or uncertain.
-
 ------------------------------------------------------------
 FINAL RATING TEST
 ------------------------------------------------------------
@@ -814,10 +811,10 @@ The user has supplied the following relevance framework:
 {state["relevance_framework"]}
 
 After completing the FTO analysis, use this user-provided
-framework to calibrate the final H / M+ / L rating.
+framework to calibrate the final H / M+ / L / NR rating.
 
 The user-provided framework determines the meaning and threshold of
-H, M+, and L for this analysis.
+H, M+, L, NR for this analysis.
 
 Do not invent a different rating framework.
 
@@ -826,6 +823,7 @@ The final rating must be exactly one of:
 H
 M+
 L
+NR
 
 ============================================================
 ANALYSIS INDEPENDENCE
@@ -899,6 +897,7 @@ The final rating must be:
 H
 M+
 L
+NR
 
 ============================================================
 RATIONALE
