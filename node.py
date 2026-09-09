@@ -5,7 +5,49 @@ from pydantic import BaseModel, Field
 import time
 from typing import Literal
 from state import RelevanceState
+import pandas as pd
 from llm import llm
+from pathlib import Path
+
+# Few-shot examples file
+FEW_SHOT_FILE = Path(__file__).parent / "Few_shot_examples.xlsx"
+
+def load_few_shot_examples():
+    df = pd.read_excel(FEW_SHOT_FILE)
+
+    examples = []
+
+    for _, row in df.iterrows():
+        example = f"""
+============================================================
+FEW-SHOT CALIBRATION EXAMPLE
+============================================================
+
+PRODUCT DESCRIPTION:
+{row["Product Description"]}
+
+PATENT:
+Publication Number: {row["Publication Number"]}
+Title: {row["title"]}
+
+ABSTRACT:
+{row["Abstract"]}
+
+INDEPENDENT CLAIM:
+{row["Independent Claim"]}
+
+ALL CLAIMS:
+{row["All Claims"]}
+
+HUMAN-ANNOTATED RELEVANCE RATING:
+{row["Relevance Rating"]}
+
+============================================================
+"""
+        examples.append(example)
+
+    return "\n".join(examples)
+
 
 # 1. PRODUCT FEATURE EXTRACTION
 # ============================================================
@@ -217,6 +259,18 @@ and potential claim correspondence between the product and the patent claims.
 This is a technical screening assessment only. It is NOT a legal
 conclusion regarding infringement, validity, enforceability, or finals
 Freedom to Operate.
+
+============================================================
+FEW-SHOT CALIBRATION EXAMPLES
+============================================================
+
+The following are human-annotated examples.
+
+Use these examples to calibrate the H / M+ / L decision boundary.
+Do not copy their conclusions blindly. Compare the technical
+relationship in each example with the current product and patent.
+
+{few_shot_examples}
 
 ============================================================
 CLAIM-CENTRIC FTO ANALYSIS
@@ -591,6 +645,8 @@ Do not invent facts.
 # ============================================================
 
 def final_analysis(state: RelevanceState):
+
+    few_shot_examples = load_few_shot_examples()
 
     # DETAILED FTO ANALYSIS
     # ========================================================
