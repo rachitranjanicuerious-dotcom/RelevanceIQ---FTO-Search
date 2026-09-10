@@ -1,4 +1,4 @@
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.types import interrupt
 from langchain_core.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field
@@ -45,6 +45,16 @@ HUMAN-ANNOTATED RELEVANCE RATING:
 """
         examples.append(example)
     return "\n".join(examples)
+
+def build_common_fto_system_prompt(few_shot_examples):
+    """
+    Build the stable prompt prefix used by both FTO analyses.
+    Keeping this prefix identical maximizes OpenAI prompt-cache hits.
+    """
+    return COMMON_FTO_INSTRUCTIONS.replace(
+        "{few_shot_examples}",
+        few_shot_examples
+    )
 
 # 1. PRODUCT FEATURE EXTRACTION
 # ============================================================
@@ -654,14 +664,21 @@ def final_analysis(state: RelevanceState):
 
     few_shot_examples = load_few_shot_examples()
 
+    # The common FTO instructions + few-shot examples are identical
+    # for the detailed and framework-only calls. Sending them as the same SystemMessage allows OpenAI prompt caching to reuse them.
+    common_fto_system_prompt = build_common_fto_system_prompt(
+        few_shot_examples
+    )
+
     # DETAILED FTO ANALYSIS
     # ========================================================
 
     detailed_prompt = f"""
 You are performing the FTO RELEVANCE ANALYSIS.
 
-Apply the following FTO methodology:
-{COMMON_FTO_INSTRUCTIONS}
+The common FTO methodology, claim rules, confidence rules, and
+few-shot calibration examples are already provided in the system
+message. Apply them exactly.
 
 ============================================================
 DETAILED RATING CALIBRATION
@@ -673,7 +690,7 @@ H
 M+
 L
 
-Use the following general RelevanceIQ definitions.
+Use the following general Relevance definitions.
 
 ------------------------------------------------------------
 H — HIGHLY RELEVANT
@@ -868,9 +885,9 @@ Return ONLY valid JSON.
     framework_prompt = f"""
 You are performing the FRAMEWORK-ONLY FTO RELEVANCE ANALYSIS.
 
-Apply the following FTO methodology:
-
-{COMMON_FTO_INSTRUCTIONS}
+The common FTO methodology, claim rules, confidence rules, and
+few-shot calibration examples are already provided in the system
+message. Apply them exactly.
 
 ============================================================
 USER-PROVIDED RELEVANCE FRAMEWORK
@@ -1009,24 +1026,36 @@ Return ONLY valid JSON.
 
 {framework_parser.get_format_instructions()}
 """
-
-
     # ========================================================
     # CALL 1 — DETAILED ANALYSIS
     # ========================================================
-
     try:
 
-        start = time.time()
-
+        # start = time.time()
         detailed_response = llm.invoke(
-            [HumanMessage(content=detailed_prompt)]
+            [
+                SystemMessage(content=common_fto_system_prompt),
+                HumanMessage(content=detailed_prompt),
+            ],
+            prompt_cache_key="relevanceiq-fto-common-v1",
+            prompt_cache_retention="24h",
         )
 
-        print(
-            "Detailed analysis duration:",
-            time.time() - start
-        )
+        # print(
+        #     "Detailed analysis duration:",
+        #     time.time() - start
+        # )
+
+        try:
+            cache_read = (
+                detailed_response.usage_metadata
+                .get("input_token_details", {})
+                .get("cache_read", 0)
+            )
+            print("Detailed analysis cached input tokens:", cache_read)
+            
+        except Exception:
+            pass
 
         detailed_result = detailed_parser.parse(
             detailed_response.content
@@ -1060,16 +1089,30 @@ Return ONLY valid JSON.
 
     try:
 
-        start = time.time()
-
+        # start = time.time()
         framework_response = llm.invoke(
-            [HumanMessage(content=framework_prompt)]
+            [
+                SystemMessage(content=common_fto_system_prompt),
+                HumanMessage(content=framework_prompt),
+            ],
+            prompt_cache_key="relevanceiq-fto-common-v1",
+            prompt_cache_retention="24h",
         )
 
-        print(
-            "Framework only duration:",
-            time.time() - start
-        )
+        # print(
+        #     "Framework only duration:",
+        #     time.time() - start
+        # )
+
+        try:
+            cache_read = (
+                framework_response.usage_metadata
+                .get("input_token_details", {})
+                .get("cache_read", 0)
+            )
+            print("Framework analysis cached input tokens:", cache_read)
+        except Exception:
+            pass
 
         framework_result = framework_parser.parse(
             framework_response.content
