@@ -11,7 +11,6 @@ from pathlib import Path
 
 # Few-shot examples file
 FEW_SHOT_FILE = Path(__file__).parent / "Few_shot_examples.xlsx"
-
 def load_few_shot_examples():
     df = pd.read_excel(FEW_SHOT_FILE)
 
@@ -45,9 +44,7 @@ HUMAN-ANNOTATED RELEVANCE RATING:
 ============================================================
 """
         examples.append(example)
-
     return "\n".join(examples)
-
 
 # 1. PRODUCT FEATURE EXTRACTION
 # ============================================================
@@ -99,7 +96,6 @@ PRODUCT DESCRIPTION:
     #     "Product feature extraction duration:",
     #     # time.time() - start
     # )
-
     result = feature_parser.parse(response.content)
     state["primary_product_features"] = result.primary_features
     state["secondary_product_features"] = result.secondary_features
@@ -109,14 +105,12 @@ PRODUCT DESCRIPTION:
         "primary_features": result.primary_features,
         "secondary_features": result.secondary_features
     })
-
     state["primary_product_features"] = approved["primary_features"]
     state["secondary_product_features"] = approved["secondary_features"]
     return state
 
 # 2. PATENT FEATURE EXTRACTION
 # ============================================================
-
 def extract_patent_features(state: RelevanceState):
     
     prompt = f"""
@@ -384,12 +378,10 @@ affirmative evidence of absence.
 ============================================================
 DO NOT INVENT PRODUCT FEATURES
 ============================================================
-
 Do not infer or invent product features that are not supported by the
 product description.
 
 Therefore:
-
 No evidence of a feature
 → NOT DISCLOSED / UNCERTAIN.
 
@@ -430,7 +422,6 @@ product's described technical operation.
 ============================================================
 TECHNICAL EQUIVALENCE
 ============================================================
-
 Different terminology does not automatically mean different technology.
 
 Where appropriate, treat a product feature as technically equivalent
@@ -447,7 +438,6 @@ Do NOT infer equivalence merely because:
 - the terminology sounds related.
 
 Technical equivalence is a technical analytical concept only.
-
 Do not make or imply a legal Doctrine of Equivalents or infringement
 conclusion.
 
@@ -473,7 +463,6 @@ SPECIFICATION AND ABSTRACT
 
 The specification, examples, abstract, and title may be used to
 understand context.
-
 If a feature appears only in the specification but not in the claim,
 do not treat that feature as a mandatory limitation of that claim.
 
@@ -602,16 +591,12 @@ Consider:
 
 90–100:
 Strong evidence and little reasonable disagreement.
-
 75–89:
 Well supported with some uncertainty.
-
 50–74:
 Plausible, but a neighboring rating is reasonably possible.
-
 25–49:
 Material ambiguity or incomplete evidence.
-
 0–24:
 Insufficient evidence to confidently distinguish the rating.
 
@@ -638,8 +623,29 @@ Avoid generic statements such as:
 "The patent is relevant because it relates to similar technology."
 
 Do not invent facts.
-"""
 
+IMPORTANT : CHARACTER AND ENCODING REQUIREMENTS
+============================================================
+
+The rationale MUST contain ASCII characters only.
+
+Use only:
+A-Z, a-z, 0-9, spaces, and:
+. , : ; ' " - / ( ) [ ] + = % &
+
+Do NOT use:
+- Greek or other Unicode letters/symbols
+- Smart quotes or curly apostrophes
+- En dashes or em dashes
+- Superscripts/subscripts
+- Mathematical symbols or arrows
+- HTML, Markdown, or special bullets
+- Corrupted encoding such as Î², â€™, â€“ or â€“
+
+Before returning the rationale, verify that it contains ONLY ASCII
+characters and exactly 2–3 sentences.
+============================================================
+"""
 # ============================================================
 # 5. FINAL ANALYSIS
 # ============================================================
@@ -659,7 +665,7 @@ Apply the following FTO methodology:
 
 ============================================================
 DETAILED RATING CALIBRATION
-============================================================
+============================================================ 
 
 For this analysis, assign exactly one rating:
 
@@ -723,15 +729,19 @@ L is appropriate when:
 - the claimed technical concept is fundamentally different;
 - important material claim limitations clearly distinguish the claimed
   invention from the product;
-- the strongest correspondence is only generic or peripheral;
+- the strongest correspondence is only generic or peripheral; 
 - the overlap is primarily at the level of field or purpose;
 - the relevant subject matter appears only in the specification or
   abstract rather than the claims; or
 - the product does not technically correspond to the actual claimed
   combination.
+  
+A limitation should support an L rating only when it is technically
+meaningful and materially distinguishes the claimed solution.
 
 Do not assign L solely because one or more product details are
 undisclosed or uncertain.
+
 ------------------------------------------------------------
 FINAL RATING TEST
 ------------------------------------------------------------
@@ -744,6 +754,10 @@ material distinction, or am I treating silence as absence?"
 If the distinction is based only on silence or incomplete product
 information, treat it as uncertainty and reduce confidence rather than
 automatically downgrading the relevance.
+
+If the difference is merely an ordinary, conventional, inherent, or
+incidental feature, do not use it as a substantive reason to downgrade
+the rating.
 
 ============================================================
 INPUTS
