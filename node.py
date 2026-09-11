@@ -98,14 +98,14 @@ Rules:
 PRODUCT DESCRIPTION:
 {state["product_description"]}
 """
-    # start = time.time()
+    start = time.time()
     response = llm.invoke(
         [HumanMessage(content=prompt)]
     )
-    # print(
-    #     "Product feature extraction duration:",
-    #     # time.time() - start
-    # )
+    print(
+        "Product feature extraction duration:",
+         time.time() - start
+    )
     result = feature_parser.parse(response.content)
     state["primary_product_features"] = result.primary_features
     state["secondary_product_features"] = result.secondary_features
@@ -180,13 +180,13 @@ ALL CLAIMS:
 {state["all_claims"]}
 """
 
-    # start = time.time()
+    start = time.time()
     response = llm.invoke(
         [HumanMessage(content=prompt)]
     )
     print(
         "Patent feature extraction duration:",
-        # time.time() - start
+         time.time() - start
     )
     try:
         result = feature_parser.parse(response.content)
@@ -691,7 +691,6 @@ M+
 L
 
 Use the following general Relevance definitions.
-
 ------------------------------------------------------------
 H — HIGHLY RELEVANT
 ------------------------------------------------------------
@@ -876,8 +875,7 @@ The rationale must contain exactly 2–3 sentences.
 Return ONLY valid JSON.
 
 {detailed_parser.get_format_instructions()}
-"""
-    
+"""  
     # ========================================================
     # FRAMEWORK-ONLY FTO ANALYSIS
     # =======================================================
@@ -1031,7 +1029,7 @@ Return ONLY valid JSON.
     # ========================================================
     try:
 
-        # start = time.time()
+        start = time.time()
         detailed_response = llm.invoke(
             [
                 SystemMessage(content=common_fto_system_prompt),
@@ -1041,10 +1039,10 @@ Return ONLY valid JSON.
             prompt_cache_retention="24h",
         )
 
-        # print(
-        #     "Detailed analysis duration:",
-        #     time.time() - start
-        # )
+        print(
+            "Detailed analysis duration:",
+            time.time() - start
+        )
 
         try:
             cache_read = (
@@ -1089,7 +1087,7 @@ Return ONLY valid JSON.
 
     try:
 
-        # start = time.time()
+        start = time.time()
         framework_response = llm.invoke(
             [
                 SystemMessage(content=common_fto_system_prompt),
@@ -1099,10 +1097,10 @@ Return ONLY valid JSON.
             prompt_cache_retention="24h",
         )
 
-        # print(
-        #     "Framework only duration:",
-        #     time.time() - start
-        # )
+        print(
+            "Framework only duration:",
+            time.time() - start
+        )
 
         try:
             cache_read = (
