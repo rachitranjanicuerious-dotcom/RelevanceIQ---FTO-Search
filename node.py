@@ -175,7 +175,7 @@ ABSTRACT:
 
 INDEPENDENT CLAIM:
 {state["independent_claim"]}
-
+      
 ALL CLAIMS:
 {state["all_claims"]}
 """
@@ -201,7 +201,7 @@ ALL CLAIMS:
 
         return state
 
-    # approved = interrupt({
+    # approved = interrupt({          
     #     "review_type": "patent",
     #     "publication_number": state["publication_number"],
     #     "primary_features": result.primary_features,
@@ -288,7 +288,7 @@ Do not determine relevance from:
 - the patent title, the abstract, the general technical field, specification-only disclosure;
 - a simple count of matching product features.
 
-The title, abstract, specification, and examples may be used to
+The title, abstract, specification, publication_number, and examples may be used to
 understand technical context, but they cannot replace the limitations
 of an actual claim.
 
@@ -452,7 +452,7 @@ Do not make or imply a legal Doctrine of Equivalents or infringement
 conclusion.
 
 ============================================================
-EXTRA PRODUCT FEATURES
+IMPORTANT : EXTRA PRODUCT FEATURES
 ============================================================
 
 Additional product features do not reduce relevance merely because
@@ -464,17 +464,15 @@ Product = A + B + C + D + E
 
 D and E do not by themselves make the claim less relevant.
 
-The analysis should focus on whether the product can correspond to
-the claimed technical combination.
+The analysis should focus on whether the product corresponds to
+the claimed technical combination. The product can have additional features, the anlysis has to be on whether the claimed patent features are in the product.
 
 ============================================================
 SPECIFICATION AND ABSTRACT
 ============================================================
 
-The specification, examples, abstract, and title may be used to
-understand context.
-If a feature appears only in the specification but not in the claim,
-do not treat that feature as a mandatory limitation of that claim.
+The specification, examples, abstract, and title are used only to
+understand the context and not for analysis.
 
 ============================================================
 CLAIM-BY-CLAIM ANALYSIS PROCESS
@@ -539,7 +537,7 @@ The final rating should be based primarily on the strongest meaningful
 claim-to-product correspondence rather than an average across
 unrelated claims.
 
-A single highly relevant actual claim can be sufficient to make the
+A single highly relevant  claim can be sufficient to make the
 patent highly relevant when the applicable rating framework supports
 that conclusion.
 
@@ -664,8 +662,9 @@ def final_analysis(state: RelevanceState):
 
     few_shot_examples = load_few_shot_examples()
 
-    # The common FTO instructions + few-shot examples are identical
-    # for the detailed and framework-only calls. Sending them as the same SystemMessage allows OpenAI prompt caching to reuse them.
+
+    # The common FTO instructions + few-shot examples -- System Message
+    
     common_fto_system_prompt = build_common_fto_system_prompt(
         few_shot_examples
     )
@@ -674,6 +673,8 @@ def final_analysis(state: RelevanceState):
     # ========================================================
 
     detailed_prompt = f"""
+    
+You are an experienced Patent Analyst.    
 You are performing the FTO RELEVANCE ANALYSIS.
 
 The common FTO methodology, claim rules, confidence rules, and
@@ -697,7 +698,7 @@ H — HIGHLY RELEVANT
 
 Assign H when at least one actual patent claim is directed to the same
 or substantially aligned core technical functionality as the product,
-and there is no clearly established material limitation that the
+and there is no clearly established material limitation of at least one patent claim that the
 product lacks, cannot satisfy, or is technically incompatible with.
 
 H can still be appropriate when some claim details are:
@@ -705,8 +706,9 @@ H can still be appropriate when some claim details are:
 - uncertain;
 - described using different terminology;
 - implementation-specific;
-- contextual; or
-- routine technical details.
+- contextual;
+- routine technical details;
+- not disclosed but are obvious in that context
 
 Do not require the product description to reproduce every claim detail
 before assigning H.
@@ -747,10 +749,8 @@ L is appropriate when:
   invention from the product;
 - the strongest correspondence is only generic or peripheral; 
 - the overlap is primarily at the level of field or purpose;
-- the relevant subject matter appears only in the specification or
-  abstract rather than the claims; or
 - the product does not technically correspond to the actual claimed
-  combination.
+  combination of even at least one claim.
   
 A limitation should support an L rating only when it is technically
 meaningful and materially distinguishes the claimed solution.
@@ -881,11 +881,14 @@ Return ONLY valid JSON.
     # =======================================================
 
     framework_prompt = f"""
+You are an experienced Patent Analyst.    
 You are performing the FRAMEWORK-ONLY FTO RELEVANCE ANALYSIS.
 
 The common FTO methodology, claim rules, confidence rules, and
 few-shot calibration examples are already provided in the system
 message. Apply them exactly.
+
+For determining the rating, use the definitions of relevance ratings only provided by the user not the one specified in detailed_prompt section.
 
 ============================================================
 USER-PROVIDED RELEVANCE FRAMEWORK
@@ -901,7 +904,7 @@ framework to calibrate the final H / M+ / L / NR rating.
 The user-provided framework determines the meaning and threshold of
 H, M+, L, NR for this analysis.
 
-Do not invent a different rating framework.
+Do not invent or use a different rating framework.
 
 The final rating must be exactly one of:
 
@@ -924,8 +927,10 @@ Do NOT use:
 
 Do not attempt to agree with or disagree with the detailed analysis.
 
-Analyze the product and patent independently and apply the user's
+Analyze the product and patent as described in common fto prompt sections and apply the user's
 framework to the result.
+
+For Framework-Only analysis, prioritize correctly identifying H references and do not miss H merely because the product does not disclose every specific limitation of the claim. Do not downgrade H to M+ or L solely due to differences in specific ingredients, components, parameters, process conditions, morphology, structure, or functionality. Determine the rating strictly according to the user's relevance framework and the location of the relevant technical innovation in the claims. Where the relevant innovation is clearly recited in an independent claim, the reference should be rated H. Where the relevant innovation is primarily introduced by dependent claims, rate M+. Where the relevant innovation is primarily disclosed outside the claims, rate L. When the evidence supports H, prefer H rather than conservatively downgrading based on product-to-claim limitation differences.
 
 ============================================================
 INPUTS
