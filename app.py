@@ -18,7 +18,7 @@ st.set_page_config(
 
 # -----------------------------------
 # Login
-## ----------------------------------
+# -----------------------------------
 
 def login():
 
@@ -98,6 +98,13 @@ product_description = st.text_area(
 uploaded_file = st.file_uploader(
     "Upload Patent Excel File",
     type=["xlsx"]
+)
+
+st.download_button(
+    label="Download Input Data Template Sample",
+    data=open("RelevanceIQ_Input_Data_Schema.xlsx", "rb").read(),
+    file_name="RelevanceIQ_Input_Data_Schema.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
 
 relevance_framework = st.text_area(
@@ -433,7 +440,15 @@ if st.session_state.analysis_started:
             st.session_state.current_index += 1
 
             st.rerun()
-            
+
+# Logout
+# --------------------------------------------------
+
+if st.button("Logout"):
+    st.session_state.logged_in = False
+    st.session_state.pop("username" , None)
+    st.rerun()    
+    
 # --------------------------------------------------
 # View Database
 # --------------------------------------------------
@@ -456,11 +471,3 @@ if st.button("View Database"):
         database_df,
         use_container_width=True
     )
-
-# Logout
-# --------------------------------------------------
-
-if st.button("Logout"):
-    st.session_state.logged_in = False
-    st.session_state.pop("username" , None)
-    st.rerun()
