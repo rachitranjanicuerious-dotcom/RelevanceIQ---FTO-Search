@@ -661,8 +661,6 @@ characters and exactly 2–3 sentences.
 def final_analysis(state: RelevanceState):
 
     few_shot_examples = load_few_shot_examples()
-
-
     # The common FTO instructions + few-shot examples -- System Message
     
     common_fto_system_prompt = build_common_fto_system_prompt(
@@ -774,6 +772,8 @@ automatically downgrading the relevance.
 If the difference is merely an ordinary, conventional, inherent, or
 incidental feature, do not use it as a substantive reason to downgrade
 the rating.
+
+Prioritize correctly identifying H references and do not miss H merely because the product does not disclose every specific limitation of the claim. Do not downgrade H to M+ or L solely due to differences in specific ingredients, components, parameters, process conditions, morphology, structure, or functionality.
 
 ============================================================
 INPUTS

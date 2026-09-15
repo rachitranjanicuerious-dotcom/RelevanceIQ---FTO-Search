@@ -16,8 +16,51 @@ st.set_page_config(
     layout="centered"
 )
 
+# -----------------------------------
+# Login
+## ----------------------------------
+
+# USERS = {
+#     "admin": "admin123",
+#     "user1": "password123"
+# }
+
+
+def login():
+
+    st.title("RelevanceIQ")
+    st.subheader("Login")
+
+    username = st.text_input("Username")
+    password = st.text_input(
+        "Password",
+        type="password"
+    )
+
+    if st.button("Login"):
+
+        users = st.secrets["users"] 
+        if username in users and password == users[username]:
+
+            st.session_state.logged_in = True
+            st.session_state.username = username
+
+            st.rerun()
+
+        else:
+            st.error("Invalid username or password")
+
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+
+if not st.session_state.logged_in:
+    login()
+    st.stop()
+
 st.title("RelevanceIQ")
 st.subheader("Patent Relevance Analysis")
+
+st.write(f"Logged in as: {st.session_state.username}")
 
 create_table()
 
@@ -415,8 +458,15 @@ if st.button("View Database"):
     )
 
     conn.close()
-
     st.dataframe(
         database_df,
         use_container_width=True
     )
+
+# Logout
+# --------------------------------------------------
+
+if st.button("Logout"):
+    st.session_state.logged_in = False
+    st.session_state.pop("username" , None)
+    st.rerun()
