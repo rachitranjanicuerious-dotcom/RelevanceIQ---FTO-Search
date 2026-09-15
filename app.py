@@ -20,12 +20,6 @@ st.set_page_config(
 # Login
 ## ----------------------------------
 
-# USERS = {
-#     "admin": "admin123",
-#     "user1": "password123"
-# }
-
-
 def login():
 
     st.title("RelevanceIQ")
