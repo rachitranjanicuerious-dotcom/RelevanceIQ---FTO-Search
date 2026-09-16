@@ -2856,7 +2856,7 @@ render_html(
     <div class="footer">
 
         RelevanceIQ &nbsp; | &nbsp;
-        iCuerious Patent Intelligence
+        iCuerious Patent Intelligence-----------------------
 
         <br><br>
 
