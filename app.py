@@ -1036,6 +1036,10 @@ if "product_features_approved" not in st.session_state:
     st.session_state.product_features_approved = False
 
 
+if "analysis_error" not in st.session_state:
+    st.session_state.analysis_error = False
+
+
 # ============================================================
 # DATABASE
 # ============================================================
@@ -2546,122 +2550,45 @@ if st.session_state.analysis_started:
 
     else:
 
-        progress_value = (
-            index / len(df)
-        )
-
-
-        st.progress(
-            progress_value
-        )
-
-
-        render_html(
-            f"""
-            <div class="status-card">
-
-                <div class="status-title">
-                    Patent {index + 1} of {len(df)}
-                </div>
-
-                <div class="status-text">
-
-                    RelevanceIQ is processing the current patent.
-
-                </div>
-
-            </div>
-            """
-        )
-
-
-        row = df.iloc[index]
-
-
-        config = {
-            "configurable": {
-                "thread_id":
-                f"{st.session_state.session_id}_patent_{index}"
-            }
-        }
-
-
-        snapshot = workflow.get_state(
-            config
-        )
-
-
-        # ====================================================
-        # FIRST EXECUTION
-        # ====================================================
-
-        if not snapshot or not snapshot.values:
-
-            state = {
-
-                "product_description":
-                    st.session_state.product_description,
-
-                "publication_number":
-                    row["Publication Number"],
-
-                "title":
-                    row["Title"], ## changed
-
-                "abstract":
-                    row["Abstract"],
-
-                "independent_claim":
-                    row["Independent Claim"],
-
-                "all_claims":
-                    row["All Claims"],
-
-                "relevance_framework":
-                    st.session_state.relevance_framework,
-
-                "primary_product_features":
-                    st.session_state.primary_product_features,
-
-                "secondary_product_features":
-                    st.session_state.secondary_product_features,
-
-                "primary_patent_features":
-                    [],
-
-                "secondary_patent_features":
-                    [],
-
-                "comparison":
-                    [],
-
-                "relevance":
-                    "",
-
-                "confidence":
-                    0,
-
-                "rationale":
-                    "",
-
-                "relevance_framework_only":
-                    "",
-
-                "confidence_framework_only":
-                    0,
-
-                "rationale_framework_only":
-                    "",
-
-                "review_type":
-                    ""
-            }
-
-
-            workflow.invoke(
-                state,
-                config=config
+        try:
+            progress_value = (
+                index / len(df)
             )
+
+
+            st.progress(
+                progress_value
+            )
+
+
+            render_html(
+                f"""
+                <div class="status-card">
+
+                    <div class="status-title">
+                        Patent {index + 1} of {len(df)}
+                    </div>
+
+                    <div class="status-text">
+
+                        RelevanceIQ is processing the current patent.
+
+                    </div>
+
+                </div>
+                """
+            )
+
+
+            row = df.iloc[index]
+
+
+            config = {
+                "configurable": {
+                    "thread_id":
+                    f"{st.session_state.session_id}_patent_{index}"
+                }
+            }
 
 
             snapshot = workflow.get_state(
@@ -2669,181 +2596,293 @@ if st.session_state.analysis_started:
             )
 
 
-        # ====================================================
-        # HUMAN INTERRUPT
-        # ====================================================
+            # ====================================================
+            # FIRST EXECUTION
+            # ====================================================
 
-        if snapshot.interrupts:
+            if not snapshot or not snapshot.values:
 
-            review = snapshot.interrupts[0].value
+                state = {
+
+                    "product_description":
+                        st.session_state.product_description,
+
+                    "publication_number":
+                        row["Publication Number"],
+
+                    "title":
+                        row["Title"], ## changed
+
+                    "abstract":
+                        row["Abstract"],
+
+                    "independent_claim":
+                        row["Independent Claim"],
+
+                    "all_claims":
+                        row["All Claims"],
+
+                    "relevance_framework":
+                        st.session_state.relevance_framework,
+
+                    "primary_product_features":
+                        st.session_state.primary_product_features,
+
+                    "secondary_product_features":
+                        st.session_state.secondary_product_features,
+
+                    "primary_patent_features":
+                        [],
+
+                    "secondary_patent_features":
+                        [],
+
+                    "comparison":
+                        [],
+
+                    "relevance":
+                        "",
+
+                    "confidence":
+                        0,
+
+                    "rationale":
+                        "",
+
+                    "relevance_framework_only":
+                        "",
+
+                    "confidence_framework_only":
+                        0,
+
+                    "rationale_framework_only":
+                        "",
+
+                    "review_type":
+                        ""
+                }
 
 
-            if review["review_type"] == "product":
-
-                render_html(
-                    """
-                    <div class="section-header">
-
-                        <div class="section-number">
-                            !
-                        </div>
-
-                        <div class="section-title">
-                            Human Review Required
-                        </div>
-
-                    </div>
-
-                    <div class="section-description">
-
-                        Review the extracted product features
-                        before patent relevance analysis continues.
-
-                    </div>
-                    """
+                workflow.invoke(
+                    state,
+                    config=config
                 )
 
 
-                col1, col2 = st.columns(2)
+                snapshot = workflow.get_state(
+                    config
+                )
 
 
-                with col1:
+            # ====================================================
+            # HUMAN INTERRUPT
+            # ====================================================
 
-                    edited_primary = st.text_area(
-                        "Primary Product Features",
+            if snapshot.interrupts:
 
-                        value="\n".join(
-                            review["primary_features"]
-                        ),
+                review = snapshot.interrupts[0].value
 
-                        height=230,
 
-                        key=f"primary_{index}_product"
+                if review["review_type"] == "product":
+
+                    render_html(
+                        """
+                        <div class="section-header">
+
+                            <div class="section-number">
+                                !
+                            </div>
+
+                            <div class="section-title">
+                                Human Review Required
+                            </div>
+
+                        </div>
+
+                        <div class="section-description">
+
+                            Review the extracted product features
+                            before patent relevance analysis continues.
+
+                        </div>
+                        """
                     )
 
 
-                with col2:
-
-                    edited_secondary = st.text_area(
-                        "Secondary Product Features",
-
-                        value="\n".join(
-                            review["secondary_features"]
-                        ),
-
-                        height=230,
-
-                        key=f"secondary_{index}_product"
-                    )
+                    col1, col2 = st.columns(2)
 
 
-                if st.button(
-                    "Approve & Continue",
+                    with col1:
 
-                    key=f"approve_{index}_product",
+                        edited_primary = st.text_area(
+                            "Primary Product Features",
 
-                    use_container_width=True
-                ):
+                            value="\n".join(
+                                review["primary_features"]
+                            ),
 
-                    approved_features = {
+                            height=230,
 
-                        "primary_features": [
-
-                            x.strip()
-
-                            for x in edited_primary.split("\n")
-
-                            if x.strip()
-                        ],
-
-                        "secondary_features": [
-
-                            x.strip()
-
-                            for x in edited_secondary.split("\n")
-
-                            if x.strip()
-                        ]
-                    }
+                            key=f"primary_{index}_product"
+                        )
 
 
-                    workflow.invoke(
-                        Command(
-                            resume=approved_features
-                        ),
+                    with col2:
 
-                        config=config
-                    )
+                        edited_secondary = st.text_area(
+                            "Secondary Product Features",
+
+                            value="\n".join(
+                                review["secondary_features"]
+                            ),
+
+                            height=230,
+
+                            key=f"secondary_{index}_product"
+                        )
 
 
-                    st.rerun()
+                    if st.button(
+                        "Approve & Continue",
+
+                        key=f"approve_{index}_product",
+
+                        use_container_width=True
+                    ):
+
+                        approved_features = {
+
+                            "primary_features": [
+
+                                x.strip()
+
+                                for x in edited_primary.split("\n")
+
+                                if x.strip()
+                            ],
+
+                            "secondary_features": [
+
+                                x.strip()
+
+                                for x in edited_secondary.split("\n")
+
+                                if x.strip()
+                            ]
+                        }
 
 
-        # ====================================================
-        # CONTINUE WORKFLOW
-        # ====================================================
+                        workflow.invoke(
+                            Command(
+                                resume=approved_features
+                            ),
 
-        elif snapshot.next:
+                            config=config
+                        )
+
+
+                        st.rerun()
+
+
+            # ====================================================
+            # CONTINUE WORKFLOW
+            # ====================================================
+
+            elif snapshot.next:
+
+                st.info(
+                    "Continuing patent analysis..."
+                )
+
+                st.rerun()
+
+
+            # ====================================================
+            # WORKFLOW FINISHED
+            # ====================================================
+
+            else:
+
+                result = snapshot.values
+
+
+                save_result(
+                    result
+                )
+
+                st.session_state.results.append({
+
+                    "Publication Number":
+                        result["publication_number"],
+
+                    "Title":
+                        result["title"],
+
+                    "Patent Primary Features":
+                        result["primary_patent_features"],
+
+                    "Patent Secondary Features":
+                        result["secondary_patent_features"],
+
+                    "Relevance":
+                        result["relevance"],
+
+                    "Confidence":
+                        result["confidence"],
+
+                    "Rationale":
+                        result["rationale"],
+
+                    "Relevance_Framework_Only":
+                        result["relevance_framework_only"],
+
+                    "Confidence_Framework_Only":
+                        result["confidence_framework_only"],
+
+                    "Rationale_Framework_Only":
+                        result["rationale_framework_only"]
+
+                })
+
+
+                st.session_state.current_index += 1
+
+
+                st.rerun()
+
+
+        except Exception as e:
+
+            st.session_state.analysis_started = False
+            st.session_state.analysis_error = True
+
+            st.error(
+                f"Analysis stopped at Patent {index + 1}: "
+                f"{row['Publication Number']}"
+            )
+
+            st.warning(
+                f"Error: {str(e)}"
+            )
 
             st.info(
-                "Continuing patent analysis..."
+                "Correct the issue and click Resume Analysis "
+                "to continue from this patent."
             )
 
-            st.rerun()
+if st.session_state.get("analysis_error", False):
 
+    if st.button(
+        "▶ Resume Analysis",
+        use_container_width=True,
+        key="resume_analysis"
+    ):
 
-        # ====================================================
-        # WORKFLOW FINISHED
-        # ====================================================
+        st.session_state.analysis_error = False
+        st.session_state.analysis_started = True
 
-        else:
+        st.rerun()
 
-            result = snapshot.values
-
-
-            save_result(
-                result
-            )
-
-            st.session_state.results.append({
-
-                "Publication Number":
-                    result["publication_number"],
-
-                "Title":
-                    result["title"],
-
-                "Patent Primary Features":
-                    result["primary_patent_features"],
-
-                "Patent Secondary Features":
-                    result["secondary_patent_features"],
-
-                "Relevance":
-                    result["relevance"],
-
-                "Confidence":
-                    result["confidence"],
-
-                "Rationale":
-                    result["rationale"],
-
-                "Relevance_Framework_Only":
-                    result["relevance_framework_only"],
-
-                "Confidence_Framework_Only":
-                    result["confidence_framework_only"],
-
-                "Rationale_Framework_Only":
-                    result["rationale_framework_only"]
-
-            })
-
-
-            st.session_state.current_index += 1
-
-
-            st.rerun()
 
 
 # ============================================================
