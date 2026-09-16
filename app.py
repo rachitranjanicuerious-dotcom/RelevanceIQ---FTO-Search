@@ -1918,7 +1918,7 @@ if run:
 
     required_columns = [
         "Publication Number",
-        "title",
+        "Title", ## changed
         "Abstract",
         "Independent Claim",
         "All Claims"
@@ -2481,7 +2481,7 @@ if st.session_state.analysis_started:
                 <div class="info-card">
 
                     <div class="info-card-title">
-                        NL
+                        NR
                     </div>
 
                     <div class="info-card-value">
@@ -2606,7 +2606,7 @@ if st.session_state.analysis_started:
                     row["Publication Number"],
 
                 "title":
-                    row["title"],
+                    row["Title"], ## changed
 
                 "abstract":
                     row["Abstract"],
@@ -2805,7 +2805,6 @@ if st.session_state.analysis_started:
                 result
             )
 
-
             st.session_state.results.append({
 
                 "Publication Number":
@@ -2856,7 +2855,7 @@ render_html(
     <div class="footer">
 
         RelevanceIQ &nbsp; | &nbsp;
-        iCuerious Patent Intelligence-----------------------
+        iCuerious Patent Intelligence
 
         <br><br>
 
