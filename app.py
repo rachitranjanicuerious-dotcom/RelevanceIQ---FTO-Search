@@ -779,12 +779,6 @@ render_html(
         border-radius: 4px;
     }
 
-    
-    div[data-testid="stAlert"] [data-testid="stMarkdownContainer"],
-    div[data-testid="stAlert"] [data-testid="stMarkdownContainer"] p {
-           color: #7A4B00 !important;
-           -webkit-text-fill-color: #7A4B00 !important;
-    }
 
     /* ========================================================
        FOOTER
@@ -806,74 +800,64 @@ render_html(
 
 
     /* ========================================================
-   STREAMLIT CHROME
-   ======================================================== */
+       STREAMLIT HEADER CONTROLS
+       ======================================================== */
 
-    /* Hide Streamlit's default hamburger menu */
-    #MainMenu {
-        visibility: hidden;
-    }
-
-    /* Hide Streamlit footer */
-    footer {
-        visibility: hidden;
-    }
-
-    /* White Streamlit header instead of black strip */
     header[data-testid="stHeader"] {
-        background-color: #FFFFFF !important;
-        border-bottom: 1px solid #DEDEDE !important;
-    }
-
-    /* Keep Streamlit toolbar / Share visible */
-    div[data-testid="stToolbar"] {
-        visibility: visible !important;
-        opacity: 1 !important;
-    }
-
-    /* ========================================================
-    SIDEBAR COLLAPSE ARROW
-    ======================================================== */
-
-    /* Make the sidebar arrow button clearly visible */
-    button[data-testid="stSidebarCollapseButton"] {
         background-color: #071426 !important;
-        border: 1px solid #071426 !important;
-        border-radius: 4px !important;
+    }
+
+    /* Keep normal Streamlit header controls visible */
+    header[data-testid="stHeader"] button {
         color: #FFFFFF !important;
     }
 
-    /* Make the arrow itself white */
-    button[data-testid="stSidebarCollapseButton"] svg {
+    header[data-testid="stHeader"] button svg {
         color: #FFFFFF !important;
-        fill: #FFFFFF !important;
+        fill: none !important;
         stroke: #FFFFFF !important;
     }
 
-    /* Ensure the arrow remains visible on hover */
+    /* ========================================================
+       SIDEBAR COLLAPSE ARROW
+       ======================================================== */
+
+    header[data-testid="stHeader"]
+    button[data-testid="stSidebarCollapseButton"] {
+        background-color: #071426 !important;
+        border: 1px solid #071426 !important;
+        color: #FFFFFF !important;
+        opacity: 1 !important;
+    }
+
+    header[data-testid="stHeader"]
+    button[data-testid="stSidebarCollapseButton"] svg {
+        color: #FFFFFF !important;
+        fill: none !important;
+        stroke: #FFFFFF !important;
+        opacity: 1 !important;
+    }
+
+    header[data-testid="stHeader"]
+    button[data-testid="stSidebarCollapseButton"] path {
+        stroke: #FFFFFF !important;
+        fill: none !important;
+        opacity: 1 !important;
+    }
+
+    header[data-testid="stHeader"]
     button[data-testid="stSidebarCollapseButton"]:hover {
         background-color: #101F32 !important;
         border-color: #101F32 !important;
     }
 
-    button[data-testid="stSidebarCollapseButton"]:hover svg {
+    header[data-testid="stHeader"]
+    button[data-testid="stSidebarCollapseButton"]:hover svg,
+    header[data-testid="stHeader"]
+    button[data-testid="stSidebarCollapseButton"]:hover path {
         color: #FFFFFF !important;
-        fill: #FFFFFF !important;
         stroke: #FFFFFF !important;
-    }
-
-    /* ========================================================
-    HEADER / SHARE CONTROLS
-    ======================================================== */
-
-    header[data-testid="stHeader"] button {
-        color: #071426 !important;
-    }
-
-    header[data-testid="stHeader"] button svg {
-        color: #071426 !important;
-        fill: #071426 !important;
-        stroke: #071426 !important;
+        fill: none !important;
     }
 
     /* Keep toolbar visible */
@@ -881,6 +865,19 @@ render_html(
         visibility: visible !important;
         opacity: 1 !important;
     }
+
+    /* ========================================================
+       STREAMLIT CHROME
+       ======================================================== */
+
+    #MainMenu {
+        visibility: hidden;
+    }
+
+    footer {
+        visibility: hidden;
+    }
+
     </style>
     """
 )
