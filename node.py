@@ -234,11 +234,13 @@ class DetailedAnalysisOutput(BaseModel):
     comparisons: list[FeatureMatch]
     relevance: Literal["H", "M+", "L"]
     rationale: str
+    reasoning : str
     confidence: int = Field(ge=0, le=100)
 
 class FrameworkOnlyOutput(BaseModel):
     relevance_framework_only: Literal["H", "M+", "L", "NR"]
     rationale_framework_only: str
+    reasoning_framework_only : str
     confidence_framework_only: int = Field(ge=0, le=100)
 
 detailed_parser = PydanticOutputParser(
@@ -653,6 +655,31 @@ Do NOT use:
 Before returning the rationale, verify that it contains ONLY ASCII
 characters and exactly 2–3 sentences.
 ============================================================
+
+REASONING INSTRUCTIONS:
+
+The reasoning field explains why the final relevance rating is M+ or L under the applicable rating framework.
+
+If the final relevance rating is H:
+- Return an empty string "" for the reasoning field.
+
+If the final relevance rating is NR (in case of framework_only_analysis):
+- Return an empty string "" for the reasoning field.
+
+If the final relevance rating is M+ or L:
+- Identify the specific actual claim limitation(s) or claim-related distinction that prevents the reference from receiving an H rating under the applicable rating framework.
+- Explain specifically what is missing, not disclosed, uncertain, or materially different in the product compared with the relevant claim.
+- Do not invent or assume claim limitations.
+- Do not combine limitations from separate claims.
+- Do not treat a limitation from a dependent claim as a limitation of the independent claim.
+- Focus on mandatory claim limitations rather than merely optional or disclosed features.
+- The reasoning must be specific to the actual patent claims and the product evidence.
+- Do not merely repeat the rationale.
+
+For M+ or L, the reasoning must clearly answer:
+"What specific claim limitation or claim-related distinction is responsible for this rating?"
+
+
 """
 # ============================================================
 # 5. FINAL ANALYSIS
@@ -863,6 +890,7 @@ Return:
 2. relevance
 3. rationale
 4. confidence
+5. reasoning
 
 The relevance must be exactly one of:
 
@@ -1024,6 +1052,7 @@ Return:
 1. relevance_framework_only
 2. rationale_framework_only
 3. confidence_framework_only
+4. reasoning_framework_only
 
 Return ONLY valid JSON.
 
@@ -1068,6 +1097,7 @@ Return ONLY valid JSON.
         state["relevance"] = detailed_result.relevance
         state["rationale"] = detailed_result.rationale
         state["confidence"] = detailed_result.confidence
+        state["reasoning"] = detailed_result.reasoning
 
     except Exception as e:
 
@@ -1084,6 +1114,8 @@ Return ONLY valid JSON.
         state["relevance"] = "error"
         state["rationale"] = "error"
         state["confidence"] = 0
+        state["reasoning"] = "error"
+        
 
 
     # ========================================================
@@ -1132,6 +1164,9 @@ Return ONLY valid JSON.
         state["confidence_framework_only"] = (
             framework_result.confidence_framework_only
         )
+        state["reasoning_framework_only"] = (
+                    framework_result.reasoning_framework_only
+                )
 
     except Exception as e:
 
@@ -1146,6 +1181,7 @@ Return ONLY valid JSON.
 
         state["relevance_framework_only"] = "error"
         state["rationale_framework_only"] = ""
-        state["confidence_framework_only"] = 0
-
+        state["confidence_framework_only"] = 0 
+        state["reasoning_framework_only"] = ""
+        
     return state

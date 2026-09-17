@@ -9,7 +9,7 @@ def create_table():
     cursor = conn.cursor()
 
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS patent_FTO_relevance_results (
+    CREATE TABLE IF NOT EXISTS FTO_relevance_results (
 
         id INTEGER PRIMARY KEY AUTOINCREMENT,
 
@@ -23,9 +23,11 @@ def create_table():
         relevance TEXT,
         confidence INTEGER,
         rationale TEXT,
+        reasoning TEXT,
         relevance_framework_only TEXT,
         confidence_framework_only INTEGER,
         rationale_framework_only TEXT,
+        reasoning_framework_only TEXT,
         primary_patent_features TEXT,
         secondary_patent_features TEXT
 
@@ -42,7 +44,7 @@ def save_result(result):
 
     cursor.execute(
         """
-        INSERT INTO patent_FTO_relevance_results(
+        INSERT INTO FTO_relevance_results(
 
             publication_number,
             title,
@@ -54,15 +56,17 @@ def save_result(result):
             relevance,
             confidence,
             rationale,
+            reasoning,
             relevance_framework_only,
             confidence_framework_only,
             rationale_framework_only,
+            reasoning_framework_only,
             primary_patent_features,
             secondary_patent_features
 
         )
 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?, ?, ?)
         """,
         (
 
@@ -76,13 +80,13 @@ def save_result(result):
             result["relevance"],
             result["confidence"],
             result["rationale"],
+            result["reasoning"],
             result["relevance_framework_only"],
             result["confidence_framework_only"],
             result["rationale_framework_only"],
+            result["reasoning_framework_only"],
             json.dumps(result["primary_patent_features"]),
             json.dumps(result["secondary_patent_features"])
-            # result["primary_patent_features"],
-            # result["secondary_patent_features"]
 
 
         )
@@ -100,7 +104,7 @@ def fetch_all_results():
     cursor.execute(
         """
         SELECT *
-        FROM patent_FTO_relevance_results
+        FROM FTO_relevance_results
         ORDER BY id DESC
         """
     )
@@ -117,7 +121,7 @@ create_table()
 
 conn = sqlite3.connect(DATABASE_NAME)
 df = pd.read_sql_query(
-    "SELECT * FROM patent_FTO_relevance_results",
+    "SELECT * FROM FTO_relevance_results",
     conn
 )
 

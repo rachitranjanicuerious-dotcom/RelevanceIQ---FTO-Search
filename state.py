@@ -33,10 +33,12 @@ class RelevanceState(TypedDict) :
     relevance : str
     confidence : int
     rationale  : str
+    reasoning   : str
 
     #Final outputs (framework-only method)
     relevance_framework_only: str
     confidence_framework_only: int
+    reasoning_framework_only : str
     rationale_framework_only: str
 
     current_patent_index: int

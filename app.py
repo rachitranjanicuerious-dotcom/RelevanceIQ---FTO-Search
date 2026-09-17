@@ -12,7 +12,6 @@ from node import llm, feature_parser
 from graph import workflow
 from database import create_table, save_result
 
-
 # ============================================================
 # PAGE CONFIG
 # ============================================================
@@ -23,7 +22,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
 
 # ============================================================
 # HTML HELPER
@@ -115,9 +113,7 @@ render_html(
 
     .sidebar-brand {
         padding: 12px 8px 25px 8px;
-
         border-bottom: 1px solid #29394C;
-
         margin-bottom: 20px;
     }
 
@@ -135,56 +131,39 @@ render_html(
 
     .sidebar-brand-sub {
         font-size: 11px;
-
         color: #B8C2CE !important;
-
         margin-top: 3px;
-
         letter-spacing: 0.5px;
     }
 
     .sidebar-section {
         font-size: 11px;
-
         color: #8997A8 !important;
-
         text-transform: uppercase;
-
-        letter-spacing: 1.2px;
-
+        letter-spacing: 1.2px; 
         margin-top: 25px;
         margin-bottom: 10px;
     }
 
     .sidebar-user {
         background: var(--navy-light);
-
         border: 1px solid #26384C;
-
         border-radius: 5px;
-
         padding: 14px;
-
         margin-top: 25px;
     }
 
     .sidebar-user-label {
         font-size: 10px;
-
         color: #8997A8 !important;
-
         text-transform: uppercase;
-
         letter-spacing: 1px;
     }
 
     .sidebar-user-name {
         font-size: 14px;
-
         color: #FFFFFF !important;
-
         margin-top: 4px;
-
         word-break: break-word;
     }
 
@@ -219,27 +198,18 @@ render_html(
 
     .top-header {
         background: #FFFFFF;
-
         border-bottom: 1px solid #DEDEDE;
-
         padding: 18px 28px;
-
         margin: -1.5rem -3rem 30px -3rem;
-
         display: flex;
-
         align-items: center;
-
         justify-content: space-between;
     }
 
     .brand-name {
         font-size: 26px;
-
         font-weight: 700;
-
         color: #1D1D1D;
-
         letter-spacing: -1px;
     }
 
@@ -249,23 +219,16 @@ render_html(
 
     .brand-tagline {
         font-size: 10px;
-
         color: #666666;
-
         letter-spacing: 0.5px;
-
         margin-top: -3px;
     }
 
     .product-name {
         font-size: 20px;
-
         font-weight: 600;
-
         color: var(--navy);
-
         border-left: 2px solid var(--orange);
-
         padding-left: 15px;
     }
 
@@ -276,15 +239,10 @@ render_html(
 
     .hero {
         background: var(--navy);
-
         border-radius: 4px;
-
         padding: 35px 42px;
-
         margin-bottom: 25px;
-
         position: relative;
-
         overflow: hidden;
     }
 
@@ -292,27 +250,20 @@ render_html(
         content: "";
 
         position: absolute;
-
         right: -100px;
         top: -120px;
-
         width: 350px;
         height: 350px;
 
         border: 1px solid rgba(244,81,42,0.25);
-
         border-radius: 50%;
     }
 
     .hero-kicker {
         color: var(--orange) !important;
-
         font-size: 12px;
-
         text-transform: uppercase;
-
         letter-spacing: 1.5px;
-
         font-weight: 600;
     }
 
@@ -320,9 +271,7 @@ render_html(
         color: #FFFFFF !important;
 
         font-size: 34px;
-
         font-weight: 600;
-
         margin-top: 8px;
         margin-bottom: 8px;
     }
@@ -331,9 +280,7 @@ render_html(
         color: #C5CED8 !important;
 
         font-size: 14px;
-
         max-width: 760px;
-
         line-height: 1.7;
     }
 
@@ -346,11 +293,8 @@ render_html(
         display: flex;
 
         align-items: center;
-
         gap: 12px;
-
         margin-top: 30px;
-
         margin-bottom: 15px;
     }
 
@@ -359,42 +303,28 @@ render_html(
         height: 30px;
 
         background: var(--orange);
-
         color: #FFFFFF !important;
-
         display: flex;
-
         align-items: center;
-
         justify-content: center;
-
         font-weight: 600;
-
         border-radius: 50%;
-
         font-size: 13px;
-
         flex-shrink: 0;
     }
 
     .section-title {
         color: var(--navy) !important;
-
         font-size: 20px;
-
         font-weight: 600;
     }
 
     .section-description {
         color: var(--muted) !important;
-
         font-size: 13px;
-
         margin-top: -8px;
-
         margin-bottom: 15px;
     }
-
 
     /* ========================================================
        CARDS
@@ -885,7 +815,6 @@ render_html(
     """
 )
 
-
 # ============================================================
 # LOGIN
 # ============================================================
@@ -944,23 +873,17 @@ def login():
         </div>
         """
     )
-
-
     username = st.text_input(
         "Username",
         placeholder="Enter username",
         key="login_username"
     )
-
-
     password = st.text_input(
         "Password",
         type="password",
         placeholder="Enter password",
         key="login_password"
     )
-
-
     if st.button(
         "Login",
         use_container_width=True,
@@ -1182,7 +1105,6 @@ render_html(
     """
 )
 
-
 # ============================================================
 # DATABASE PAGE
 # ============================================================
@@ -1221,7 +1143,7 @@ if page == "Database":
         database_df = pd.read_sql_query(
             """
             SELECT *
-            FROM patent_FTO_relevance_results
+            FROM FTO_relevance_results
             ORDER BY id DESC
             """,
             conn
@@ -1253,11 +1175,6 @@ if page == "Database":
             use_container_width=True,
             hide_index=True
         )
-
-        # # Download database
-        # csv_data = database_df.to_csv(
-        #     index=False
-        # ).encode("utf-8")
 
         st.download_button(
             "⬇ Download Database",
@@ -1603,7 +1520,6 @@ if page == "Results":
             hide_index=True
         )
 
-
         # ====================================================
         # DOWNLOAD
         # ====================================================
@@ -1616,14 +1532,12 @@ if page == "Results":
             key="download_results"
         )
 
-
     else:
 
         st.info(
             "No analysis results are available yet. "
             "Run an analysis first."
         )
-
 
     st.stop()
 
@@ -2525,7 +2439,6 @@ if st.session_state.analysis_started:
             hide_index=True
         )
 
-
         # ====================================================
         # DOWNLOAD
         # ====================================================
@@ -2648,6 +2561,9 @@ if st.session_state.analysis_started:
                     "rationale":
                         "",
 
+                    "reasoning":
+                        "",    
+            
                     "relevance_framework_only":
                         "",
 
@@ -2656,6 +2572,9 @@ if st.session_state.analysis_started:
 
                     "rationale_framework_only":
                         "",
+
+                    "reasoning_framework_only":
+                        "",    
 
                     "review_type":
                         ""
@@ -2832,6 +2751,9 @@ if st.session_state.analysis_started:
                     "Rationale":
                         result["rationale"],
 
+                    "Reasoning":
+                            result["reasoning"],    
+
                     "Relevance_Framework_Only":
                         result["relevance_framework_only"],
 
@@ -2839,7 +2761,10 @@ if st.session_state.analysis_started:
                         result["confidence_framework_only"],
 
                     "Rationale_Framework_Only":
-                        result["rationale_framework_only"]
+                        result["rationale_framework_only"] ,
+
+                    "Reasoning_Framework_Only":
+                        result["reasoning_framework_only"]    
 
                 })
 
