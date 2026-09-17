@@ -1114,7 +1114,7 @@ Return ONLY valid JSON.
         state["relevance"] = "error"
         state["rationale"] = "error"
         state["confidence"] = 0
-        state["reasoning"] = "error"
+        state["reasoning"] = ""
         
 
 
