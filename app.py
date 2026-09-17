@@ -5,7 +5,6 @@ import os
 import textwrap
 
 import pandas as pd
-
 from langgraph.types import Command
 from langchain_core.messages import HumanMessage
 
@@ -2608,7 +2607,7 @@ if st.session_state.analysis_started:
                         st.session_state.product_description,
 
                     "publication_number":
-                        row["Publication Number"],
+                        str(row["Publication Number"]),
 
                     "title":
                         row["Title"], ## changed
