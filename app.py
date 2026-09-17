@@ -806,15 +806,47 @@ render_html(
 
 
     /* ========================================================
-       STREAMLIT CHROME
-       ======================================================== */
+   STREAMLIT CHROME
+   ======================================================== */
 
+    /* Hide Streamlit's default hamburger menu */
     #MainMenu {
         visibility: hidden;
     }
 
+    /* Hide Streamlit footer */
     footer {
         visibility: hidden;
+    }
+
+    /* Remove the black top strip */
+    header[data-testid="stHeader"] {
+        background-color: #FFFFFF !important;
+        color: var(--navy) !important;
+        border-bottom: 1px solid #DEDEDE !important;
+    }
+
+    /* Keep the Streamlit toolbar / Share button visible */
+    div[data-testid="stToolbar"] {
+        visibility: visible !important;
+    }
+
+    /* Make toolbar icons and text visible */
+    header[data-testid="stHeader"] button,
+    header[data-testid="stHeader"] a,
+    header[data-testid="stHeader"] svg {
+        color: var(--navy) !important;
+        fill: var(--navy) !important;
+    }
+
+    /* Share button / toolbar text */
+    header[data-testid="stHeader"] button {
+        color: var(--navy) !important;
+    }
+
+    /* Keep toolbar visible even if Streamlit applies opacity */
+    header[data-testid="stHeader"] [data-testid="stToolbar"] {
+        opacity: 1 !important;
     }
 
     </style>
