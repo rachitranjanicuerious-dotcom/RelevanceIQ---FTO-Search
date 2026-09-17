@@ -819,36 +819,68 @@ render_html(
         visibility: hidden;
     }
 
-    /* Remove the black top strip */
+    /* White Streamlit header instead of black strip */
     header[data-testid="stHeader"] {
         background-color: #FFFFFF !important;
-        color: var(--navy) !important;
         border-bottom: 1px solid #DEDEDE !important;
     }
 
-    /* Keep the Streamlit toolbar / Share button visible */
+    /* Keep Streamlit toolbar / Share visible */
     div[data-testid="stToolbar"] {
         visibility: visible !important;
-    }
-
-    /* Make toolbar icons and text visible */
-    header[data-testid="stHeader"] button,
-    header[data-testid="stHeader"] a,
-    header[data-testid="stHeader"] svg {
-        color: var(--navy) !important;
-        fill: var(--navy) !important;
-    }
-
-    /* Share button / toolbar text */
-    header[data-testid="stHeader"] button {
-        color: var(--navy) !important;
-    }
-
-    /* Keep toolbar visible even if Streamlit applies opacity */
-    header[data-testid="stHeader"] [data-testid="stToolbar"] {
         opacity: 1 !important;
     }
 
+    /* ========================================================
+    SIDEBAR COLLAPSE ARROW
+    ======================================================== */
+
+    /* Make the sidebar arrow button clearly visible */
+    button[data-testid="stSidebarCollapseButton"] {
+        background-color: #071426 !important;
+        border: 1px solid #071426 !important;
+        border-radius: 4px !important;
+        color: #FFFFFF !important;
+    }
+
+    /* Make the arrow itself white */
+    button[data-testid="stSidebarCollapseButton"] svg {
+        color: #FFFFFF !important;
+        fill: #FFFFFF !important;
+        stroke: #FFFFFF !important;
+    }
+
+    /* Ensure the arrow remains visible on hover */
+    button[data-testid="stSidebarCollapseButton"]:hover {
+        background-color: #101F32 !important;
+        border-color: #101F32 !important;
+    }
+
+    button[data-testid="stSidebarCollapseButton"]:hover svg {
+        color: #FFFFFF !important;
+        fill: #FFFFFF !important;
+        stroke: #FFFFFF !important;
+    }
+
+    /* ========================================================
+    HEADER / SHARE CONTROLS
+    ======================================================== */
+
+    header[data-testid="stHeader"] button {
+        color: #071426 !important;
+    }
+
+    header[data-testid="stHeader"] button svg {
+        color: #071426 !important;
+        fill: #071426 !important;
+        stroke: #071426 !important;
+    }
+
+    /* Keep toolbar visible */
+    header[data-testid="stHeader"] [data-testid="stToolbar"] {
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
     </style>
     """
 )
