@@ -779,6 +779,12 @@ render_html(
         border-radius: 4px;
     }
 
+    
+    div[data-testid="stAlert"] [data-testid="stMarkdownContainer"],
+    div[data-testid="stAlert"] [data-testid="stMarkdownContainer"] p {
+           color: #7A4B00 !important;
+           -webkit-text-fill-color: #7A4B00 !important;
+    }
 
     /* ========================================================
        FOOTER

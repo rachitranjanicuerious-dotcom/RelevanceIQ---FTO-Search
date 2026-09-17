@@ -634,6 +634,7 @@ Avoid generic statements such as:
 
 Do not invent facts.
 
+============================================================
 IMPORTANT : CHARACTER AND ENCODING REQUIREMENTS
 ============================================================
 
@@ -643,20 +644,41 @@ Use only:
 A-Z, a-z, 0-9, spaces, and:
 . , : ; ' " - / ( ) [ ] + = % &
 
-Do NOT use:
-- Greek or other Unicode letters/symbols
+Allowed characters are ONLY:
+A-Z, a-z, 0-9, space, and:
+. , : ; ' " - / ( ) [ ] + = % &
+
+Do NOT output:
+- Greek or other Unicode characters
 - Smart quotes or curly apostrophes
-- En dashes or em dashes
-- Superscripts/subscripts
-- Mathematical symbols or arrows
-- HTML, Markdown, or special bullets
-- Corrupted encoding such as Î², â€™, â€“ or â€“
+- En dash or em dash
+- Superscripts or subscripts
+- Mathematical symbols
+- Unicode arrows
+- HTML or Markdown
+- Bullet characters
+- Non-ASCII punctuation
+- Any corrupted encoding such as:
+  Î²
+  â€™
+  â€“
+  Ã©
+  Â°
+
+IMPORTANT:
+This requirement applies to EVERY generated text field, including:
+- rationale
+- reasoning
+- rationale_framework_only
+- reasoning_framework_only
+
+If any character is outside the allowed ASCII set, replace it with the closest ASCII equivalent.
 
 Before returning the rationale, verify that it contains ONLY ASCII
 characters and exactly 2–3 sentences.
 ============================================================
-
 REASONING INSTRUCTIONS:
+============================================================
 
 The reasoning field explains why the final relevance rating is M+ or L under the applicable rating framework.
 
