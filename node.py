@@ -691,18 +691,19 @@ If the final relevance rating is NR (in case of framework_only_analysis):
 If the final relevance rating is M+ or L:
 - Identify the specific actual claim limitation(s) or claim-related distinction that prevents the reference from receiving an H rating under the applicable rating framework.
 - Explain specifically what is missing, not disclosed, uncertain, or materially different in the product compared with the relevant claim.
-- Do not invent or assume claim limitations.
 - Do not combine limitations from separate claims.
 - Do not treat a limitation from a dependent claim as a limitation of the independent claim.
 - Focus on mandatory claim limitations rather than merely optional or disclosed features.
 - The reasoning must be specific to the actual patent claims and the product evidence.
-- Do not merely repeat the rationale.
 
 For M+ or L, the reasoning must clearly answer:
 "What specific claim limitation or claim-related distinction is responsible for this rating?"
 
-
 """
+# ============================================================
+# 5. FINAL ANALYSIS
+# ============================================================
+
 # ============================================================
 # 5. FINAL ANALYSIS
 # ============================================================
@@ -711,34 +712,337 @@ def final_analysis(state: RelevanceState):
 
     few_shot_examples = load_few_shot_examples()
     # The common FTO instructions + few-shot examples -- System Message
-    
+
     common_fto_system_prompt = build_common_fto_system_prompt(
         few_shot_examples
     )
+    # ========================================================
+    # FRAMEWORK-ONLY FTO ANALYSIS
+    # =======================================================
+    
+    framework_prompt = f"""
+You are an experienced Patent Analyst.    
+You are performing the FRAMEWORK-ONLY FTO RELEVANCE ANALYSIS.
 
+The common FTO methodology, claim rules, confidence rules, and
+few-shot calibration examples are already provided in the system
+message. Apply them exactly.
+
+For determining the rating, use the definitions of relevance ratings only provided by the user not the one specified in detailed_prompt section.
+============================================================
+USER-PROVIDED RELEVANCE FRAMEWORK
+============================================================
+
+The user has supplied the following relevance framework:
+
+{state["relevance_framework"]}
+
+After completing the FTO analysis, use this user-provided
+framework to calibrate the final H / M+ / L / NR rating.
+
+The user-provided framework determines the meaning and threshold of
+H, M+, L, NR for this analysis.
+
+Do not invent or use a different rating framework.
+
+The relevance rating must be exactly one of:
+
+H
+M+
+L
+NR
+
+============================================================
+ANALYSIS INDEPENDENCE
+============================================================
+
+Perform this analysis independently as per the relevance framework provided by the user.
+
+Perform the complete claim-centric FTO analysis required by the common
+FTO methodology before assigning the Framework-Only rating.
+
+Prioritize correctly identifying H references and do not miss H merely
+because the product does not disclose every specific limitation of the
+claim.
+
+Do not downgrade H to M+ or L solely because a product limitation is
+not explicitly stated. Do not treat silence as affirmative absence.
+
+============================================================
+INPUTS
+============================================================
+
+PRODUCT DESCRIPTION:
+{state["product_description"]}
+
+PRIMARY PRODUCT FEATURES:
+{state["primary_product_features"]}
+
+SECONDARY PRODUCT FEATURES:
+{state["secondary_product_features"]}
+
+============================================================
+PATENT
+============================================================
+
+Publication Number:
+{state["publication_number"]}
+
+Title:
+{state["title"]}
+
+Abstract:
+{state["abstract"]}
+
+INDEPENDENT CLAIM:
+{state["independent_claim"]}
+
+ALL CLAIMS:
+{state["all_claims"]}
+
+PRIMARY PATENT FEATURES:
+{state["primary_patent_features"]}
+
+SECONDARY PATENT FEATURES:
+{state["secondary_patent_features"]}
+
+============================================================
+ANALYSIS TASK
+============================================================
+
+Identify the strongest actual claim or claims relevant to the product.
+
+Perform the complete claim analysis according to the FTO
+methodology.
+Then apply the USER-PROVIDED RELEVANCE FRAMEWORK to determine the
+final rating.
+
+The final rating must be:
+
+H
+M+
+L
+NR
+
+============================================================
+RATIONALE
+============================================================
+
+Write exactly 2–3 sentences.
+
+The rationale must:
+- identify the relevant actual claimed subject matter;
+- identify the corresponding product functionality;
+- explain the technical relationship;
+- apply the user's relevance framework;
+- identify the most important material distinction where supported;
+- explain why the selected rating is preferred over the nearest
+  alternative.
+
+The rationale must be specific to the actual product and patent.
+
+Do not make a legal infringement, validity, enforceability, or final
+FTO conclusion.
+
+============================================================
+OUTPUT
+============================================================
+
+Return:
+
+1. relevance_framework_only
+2. rationale_framework_only
+3. confidence_framework_only
+4. reasoning_framework_only
+
+Return ONLY valid JSON.
+
+{framework_parser.get_format_instructions()}
+"""
+
+    try:
+
+        start = time.time()
+
+        framework_response = llm.invoke(
+            [
+                SystemMessage(content=common_fto_system_prompt),
+                HumanMessage(content=framework_prompt),
+            ],
+            prompt_cache_key="relevanceiq-fto-common-v1",
+            prompt_cache_retention="24h",
+        )
+
+        print(
+            "Framework only duration:",
+            time.time() - start
+        )
+
+        try:
+            cache_read = (
+                framework_response.usage_metadata
+                .get("input_token_details", {})
+                .get("cache_read", 0)
+            )
+            print(
+                "Framework analysis cached input tokens:",
+                cache_read
+            )
+        except Exception:
+            pass
+
+        framework_result = framework_parser.parse(
+            framework_response.content
+        )
+
+        # Keep the original Framework-Only result unchanged.
+        state["relevance_framework_only"] = (
+            framework_result.relevance_framework_only
+        )
+
+        state["rationale_framework_only"] = (
+            framework_result.rationale_framework_only
+        )
+
+        state["confidence_framework_only"] = (
+            framework_result.confidence_framework_only
+        )
+
+        state["reasoning_framework_only"] = (
+            framework_result.reasoning_framework_only
+        )
+
+    except Exception as e:
+
+        print("=" * 80)
+        print("FRAMEWORK-ONLY PARSING ERROR")
+        print(e)
+
+        try:
+            print(framework_response.content)
+        except Exception:
+            pass
+
+        state["relevance_framework_only"] = "error"
+        state["rationale_framework_only"] = ""
+        state["confidence_framework_only"] = 0
+        state["reasoning_framework_only"] = ""
+
+    # ========================================================
     # DETAILED FTO ANALYSIS
     # ========================================================
+    #
+    # The detailed analysis now runs AFTER the Framework-Only
+    # analysis.
+    # It receives the Framework-Only result and acts as the
+    # validation/correction stage:
+    
+    # If the Framework-Only rating is supported by the detailed
+    # FTO analysis, state["relevance"] remains the same.
+    # If the detailed FTO analysis identifies a material reason 
+    # why that rating is incorrect, state["relevance"] is changed.
+
+    # ========================================================
+
+    framework_only_rating = state.get(
+        "relevance_framework_only",
+        "error"
+    )
+
+    framework_only_rationale = state.get(
+        "rationale_framework_only",
+        ""
+    )
 
     detailed_prompt = f"""
-    
-You are an experienced Patent Analyst.    
-You are performing the FTO RELEVANCE ANALYSIS.
+
+You are an experienced Patent Analyst.
+
+You are performing the DETAILED FTO RELEVANCE ANALYSIS.
 
 The common FTO methodology, claim rules, confidence rules, and
 few-shot calibration examples are already provided in the system
 message. Apply them exactly.
 
 ============================================================
-DETAILED RATING CALIBRATION
-============================================================ 
+TWO-STAGE RATING PROCESS
+============================================================
 
-For this analysis, assign exactly one rating:
+This analysis is the SECOND STAGE of a two-stage process.
+
+STAGE 1 - FRAMEWORK-ONLY ANALYSIS
+
+A separate analysis first evaluated the patent using the
+USER-PROVIDED RELEVANCE FRAMEWORK.
+
+Its provisional result was:
+
+Framework-Only Rating:
+{framework_only_rating}
+
+Framework-Only Rationale:
+{framework_only_rationale}
+
+For the detailed analyis assume the Framework-Only result as provisional.
+
+STAGE 2 - DETAILED FTO VALIDATION
+
+Your task is now to perform the detailed FTO analysis and
+validate the Framework-Only rating against the actual patent claims
+and product evidence.
+
+Do NOT automatically agree with the Framework-Only rating.
+
+Do NOT automatically downgrade it either.
+
+Instead:
+
+1. Perform the detailed FTO claim analysis.
+2. Identify the strongest actual relevant claims.
+3. Identify their mandatory technical limitations.
+4. Compare those limitations against the product evidence.
+5. Determine whether the Framework-Only rating is supported by the
+   actual claim evidence.
+6. If the Framework-Only rating is supported, KEEP THE SAME RATING.
+7. If the Framework-Only rating is not supported because the detailed
+   analysis establishes a material technical distinction or another
+   claim-centric reason that changes the applicable rating, CORRECT
+   THE FINAL DETAILED RATING.
+8. The final detailed rating must be stored in the existing
+   `relevance` field.
+9. The original Framework-Only rating must remain unchanged in the
+   existing `relevance_framework_only` field.
+
+IMPORTANT:
+
+The Framework-Only analysis is the starting rating.
+The detailed FTO analysis is the validation/correction stage.
+
+If the Framework-Only rating is technically supported after the
+detailed analysis, the final `relevance` MUST equal the
+Framework-Only rating.
+
+Do NOT change the rating merely because:
+- a claim contains additional details;
+- a product detail is not mentioned;
+- the product description is incomplete;
+- terminology differs;
+- an implementation detail is different;
+- a routine/conventional feature differs;
+- the Framework-Only rationale is less detailed than your analysis.
+
+Silence is NOT affirmative absence.
+============================================================
+DETAILED RATING CALIBRATION
+============================================================
+
+For the final detailed rating, assign exactly one:
 
 H
 M+
 L
+NR
 
-Use the following general Relevance definitions.
 ------------------------------------------------------------
 H — HIGHLY RELEVANT
 ------------------------------------------------------------
@@ -805,24 +1109,9 @@ meaningful and materially distinguishes the claimed solution.
 Do not assign L solely because one or more product details are
 undisclosed or uncertain.
 
-------------------------------------------------------------
-FINAL RATING TEST
-------------------------------------------------------------
-
-Before assigning M+ or L, ask:
-
-"Is the downgrade supported by affirmative product evidence of a
-material distinction, or am I treating silence as absence?"
-
-If the distinction is based only on silence or incomplete product
-information, treat it as uncertainty and reduce confidence rather than
-automatically downgrading the relevance.
-
-If the difference is merely an ordinary, conventional, inherent, or
-incidental feature, do not use it as a substantive reason to downgrade
-the rating.
-
-Prioritize correctly identifying H references and do not miss H merely because the product does not disclose every specific limitation of the claim. Do not downgrade H to M+ or L solely due to differences in specific ingredients, components, parameters, process conditions, morphology, structure, or functionality.
+-------------------------------------------------------------
+NR - Non Relevant
+-------------------------------------------------------------
 
 ============================================================
 INPUTS
@@ -903,6 +1192,33 @@ limitation is absent, incompatible, or materially different.
 Do not use No Match merely because the product description is silent.
 
 ============================================================
+FINAL RATING DECISION
+============================================================
+
+After completing the detailed analysis:
+
+- If the Framework-Only rating is supported, set `relevance` to
+  exactly the same rating.
+- If the Framework-Only rating is not supported because of a material
+  claim-supported distinction identified by the detailed analysis,
+  correct `relevance`.
+- The final `relevance` must be exactly one of:
+
+H
+M+
+L
+NR
+
+The `relevance_framework_only` field is NOT part of this output and
+must NOT be overwritten by this analysis.
+
+The rationale must explain the FINAL detailed rating, not merely repeat
+the Framework-Only rationale.
+
+# The reasoning must explain whether the Framework-Only rating was
+# confirmed or corrected and why.
+
+============================================================
 OUTPUT
 ============================================================
 
@@ -919,173 +1235,22 @@ The relevance must be exactly one of:
 H
 M+
 L
+NR
 
 The rationale must contain exactly 2–3 sentences.
 
 Return ONLY valid JSON.
 
 {detailed_parser.get_format_instructions()}
-"""  
-    # ========================================================
-    # FRAMEWORK-ONLY FTO ANALYSIS
-    # =======================================================
-
-    framework_prompt = f"""
-You are an experienced Patent Analyst.    
-You are performing the FRAMEWORK-ONLY FTO RELEVANCE ANALYSIS.
-
-The common FTO methodology, claim rules, confidence rules, and
-few-shot calibration examples are already provided in the system
-message. Apply them exactly.
-
-For determining the rating, use the definitions of relevance ratings only provided by the user not the one specified in detailed_prompt section.
-
-============================================================
-USER-PROVIDED RELEVANCE FRAMEWORK
-============================================================
-
-The user has supplied the following relevance framework:
-
-{state["relevance_framework"]}
-
-After completing the FTO analysis, use this user-provided
-framework to calibrate the final H / M+ / L / NR rating.
-
-The user-provided framework determines the meaning and threshold of
-H, M+, L, NR for this analysis.
-
-Do not invent or use a different rating framework.
-
-The final rating must be exactly one of:
-
-H
-M+
-L
-NR
-
-============================================================
-ANALYSIS INDEPENDENCE
-============================================================
-
-Perform this analysis independently.
-
-Do NOT use:
-- the detailed analysis rating;
-- the detailed analysis rationale;
-- the detailed analysis confidence; or
-- the detailed analysis comparisons.
-
-Do not attempt to agree with or disagree with the detailed analysis.
-
-Analyze the product and patent as described in common fto prompt sections and apply the user's
-framework to the result.
-
-For Framework-Only analysis, prioritize correctly identifying H references and do not miss H merely because the product does not disclose every specific limitation of the claim. Do not downgrade H to M+ or L solely due to differences in specific ingredients, components, parameters, process conditions, morphology, structure, or functionality. Determine the rating strictly according to the user's relevance framework and the location of the relevant technical innovation in the claims. Where the relevant innovation is clearly recited in an independent claim, the reference should be rated H. Where the relevant innovation is primarily introduced by dependent claims, rate M+. Where the relevant innovation is primarily disclosed outside the claims, rate L. When the evidence supports H, prefer H rather than conservatively downgrading based on product-to-claim limitation differences.
-
-============================================================
-INPUTS
-============================================================
-
-PRODUCT DESCRIPTION:
-{state["product_description"]}
-
-PRIMARY PRODUCT FEATURES:
-{state["primary_product_features"]}
-
-SECONDARY PRODUCT FEATURES:
-{state["secondary_product_features"]}
-
-============================================================
-PATENT
-============================================================
-
-Publication Number:
-{state["publication_number"]}
-
-Title:
-{state["title"]}
-
-Abstract:
-{state["abstract"]}
-
-INDEPENDENT CLAIM:
-{state["independent_claim"]}
-
-ALL CLAIMS:
-{state["all_claims"]}
-
-PRIMARY PATENT FEATURES:
-{state["primary_patent_features"]}
-
-SECONDARY PATENT FEATURES:
-{state["secondary_patent_features"]}
-
-============================================================
-ANALYSIS TASK
-============================================================
-
-Identify the strongest actual claim or claims relevant to the product.
-
-Perform the complete claim analysis according to the FTO
-methodology.
-
-Then apply the USER-PROVIDED RELEVANCE FRAMEWORK to determine the
-final rating.
-
-The final rating must be:
-
-H
-M+
-L
-NR
-
-============================================================
-RATIONALE
-============================================================
-
-Write exactly 2–3 sentences.
-
-The rationale must:
-- identify the relevant actual claimed subject matter;
-- identify the corresponding product functionality;
-- explain the technical relationship;
-- apply the user's relevance framework;
-- identify the most important material distinction where supported;
-- explain why the selected rating is preferred over the nearest
-  alternative.
-
-The rationale must be specific to the actual product and patent.
-
-Do not mention:
-- Exact Match;
-- Equivalent Match;
-- Partial Match; or
-- No Match.
-
-Do not make a legal infringement, validity, enforceability, or final
-FTO conclusion.
-
-============================================================
-OUTPUT
-============================================================
-
-Return:
-
-1. relevance_framework_only
-2. rationale_framework_only
-3. confidence_framework_only
-4. reasoning_framework_only
-
-Return ONLY valid JSON.
-
-{framework_parser.get_format_instructions()}
 """
     # ========================================================
-    # CALL 1 — DETAILED ANALYSIS
+    # CALL 2 — DETAILED ANALYSIS / VALIDATION
     # ========================================================
+
     try:
 
         start = time.time()
+
         detailed_response = llm.invoke(
             [
                 SystemMessage(content=common_fto_system_prompt),
@@ -1106,8 +1271,10 @@ Return ONLY valid JSON.
                 .get("input_token_details", {})
                 .get("cache_read", 0)
             )
-            print("Detailed analysis cached input tokens:", cache_read)
-            
+            print(
+                "Detailed analysis cached input tokens:",
+                cache_read
+            )
         except Exception:
             pass
 
@@ -1137,73 +1304,5 @@ Return ONLY valid JSON.
         state["rationale"] = "error"
         state["confidence"] = 0
         state["reasoning"] = ""
-        
 
-
-    # ========================================================
-    # CALL 2 — FRAMEWORK-ONLY ANALYSIS
-    # ========================================================
-
-    try:
-
-        start = time.time()
-        framework_response = llm.invoke(
-            [
-                SystemMessage(content=common_fto_system_prompt),
-                HumanMessage(content=framework_prompt),
-            ],
-            prompt_cache_key="relevanceiq-fto-common-v1",
-            prompt_cache_retention="24h",
-        )
-
-        print(
-            "Framework only duration:",
-            time.time() - start
-        )
-
-        try:
-            cache_read = (
-                framework_response.usage_metadata
-                .get("input_token_details", {})
-                .get("cache_read", 0)
-            )
-            print("Framework analysis cached input tokens:", cache_read)
-        except Exception:
-            pass
-
-        framework_result = framework_parser.parse(
-            framework_response.content
-        )
-
-        state["relevance_framework_only"] = (
-            framework_result.relevance_framework_only
-        )
-
-        state["rationale_framework_only"] = (
-            framework_result.rationale_framework_only
-        )
-
-        state["confidence_framework_only"] = (
-            framework_result.confidence_framework_only
-        )
-        state["reasoning_framework_only"] = (
-                    framework_result.reasoning_framework_only
-                )
-
-    except Exception as e:
-
-        print("=" * 80)
-        print("FRAMEWORK-ONLY PARSING ERROR")
-        print(e)
-
-        try:
-            print(framework_response.content)
-        except Exception:
-            pass
-
-        state["relevance_framework_only"] = "error"
-        state["rationale_framework_only"] = ""
-        state["confidence_framework_only"] = 0 
-        state["reasoning_framework_only"] = ""
-        
     return state
