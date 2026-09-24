@@ -1322,22 +1322,27 @@ if page == "Results":
             ]
         )
 
+        nr_count = len(
+                    result_df[
+                        result_df["Relevance"] == "NR"
+                    ]
+                )
 
-        # Framework-only NL count
-        nl_count = len(
-            result_df[
-                result_df[
-                    "Relevance_Framework_Only"
-                ] == "NL"
-            ]
-        )
+        # # Framework-only NL count
+        # nl_count = len(
+        #     result_df[
+        #         result_df[
+        #             "Relevance_Framework_Only"
+        #         ] == "NL"
+        #     ]
+        # )
 
 
         # ----------------------------------------------------
         # MAIN METRICS
         # ----------------------------------------------------
 
-        col1, col2, col3, col4 = st.columns(4)
+        col1, col2, col3, col4, col5 = st.columns(5)
 
 
         with col1:
@@ -1415,6 +1420,24 @@ if page == "Results":
                 """
             )
 
+        with col5:
+            
+                    render_html(
+                        f"""
+                        <div class="info-card">
+        
+                            <div class="info-card-title">
+                                NR
+                            </div>
+        
+                            <div class="info-card-value">
+                                {nr_count}
+                            </div>
+        
+                        </div>
+                        """
+                    )
+
 
         # ----------------------------------------------------
         # FRAMEWORK-ONLY SUMMARY
@@ -1474,11 +1497,11 @@ if page == "Results":
         )
 
 
-        framework_nl_count = len(
+        framework_nr_count = len(
             result_df[
                 result_df[
                     "Relevance_Framework_Only"
-                ] == "NL"
+                ] == "NR"
             ]
         )
 
@@ -1547,17 +1570,16 @@ if page == "Results":
                 <div class="info-card">
 
                     <div class="info-card-title">
-                        NL
+                        NR
                     </div>
 
                     <div class="info-card-value">
-                        {framework_nl_count}
+                        {framework_nr_count}
                     </div>
 
                 </div>
                 """
             )
-
 
         # ====================================================
         # RESULTS TABLE
@@ -1572,13 +1594,12 @@ if page == "Results":
                 </div>
 
                 <div class="section-title">
-                    Patent Results
+                    Common Relevance Framework Results
                 </div>
 
             </div>
             """
         )
-
 
         st.dataframe(
             result_df,
@@ -1607,7 +1628,6 @@ if page == "Results":
 
     st.stop()
 
-
 # ============================================================
 # ANALYSIS PAGE
 # ============================================================
@@ -1633,7 +1653,6 @@ render_html(
     </div>
     """
 )
-
 
 # ============================================================
 # INPUT SECTION
@@ -1675,7 +1694,6 @@ product_description = st.text_area(
 
     key="product_description_input"
 )
-
 
 # ============================================================
 # PATENT FILE
@@ -1740,7 +1758,6 @@ with col2:
         "RelevanceIQ_Input_Data_Schema.xlsx"
     )
 
-
     if os.path.exists(template_path):
 
         with open(
@@ -1761,7 +1778,6 @@ with col2:
 
                 key="download_template"
             )
-
 
 # ============================================================
 # FRAMEWORK
@@ -1832,37 +1848,28 @@ with run_col2:
         key="run_analysis_button"
     )
 
-
 if run:
-
     # --------------------------------------------------------
     # VALIDATION
     # --------------------------------------------------------
 
     if uploaded_file is None:
-
         st.warning(
             "Please upload an Excel file containing the patents."
         )
-
         st.stop()
 
 
     if not product_description.strip():
-
         st.warning(
             "Please enter the product description."
         )
-
         st.stop()
 
-
     if not relevance_framework.strip():
-
         st.warning(
             "Please provide the relevance framework."
         )
-
         st.stop()
 
 
@@ -1881,9 +1888,7 @@ if run:
         st.error(
             f"Unable to read the Excel file: {e}"
         )
-
         st.stop()
-
 
     if uploaded_df.empty:
 
@@ -1891,9 +1896,7 @@ if run:
             "The uploaded Excel file does not contain "
             "any patent rows."
         )
-
         st.stop()
-
 
     # --------------------------------------------------------
     # VALIDATE REQUIRED COLUMNS
@@ -1926,7 +1929,6 @@ if run:
 
         st.stop()
 
-
     # --------------------------------------------------------
     # SAVE SESSION DATA
     # --------------------------------------------------------
@@ -1943,32 +1945,23 @@ if run:
         relevance_framework
     )
 
-
     st.session_state.results = []
-
 
     st.session_state.current_index = 0
 
-
     st.session_state.primary_product_features = []
-
 
     st.session_state.secondary_product_features = []
 
-
     st.session_state.product_features_approved = False
 
-
     st.session_state.analysis_started = True
-
 
     st.session_state.session_id = str(
         uuid.uuid4()
     )
 
-
     st.rerun()
-
 
 # ============================================================
 # PRODUCT FEATURE EXTRACTION
@@ -2060,9 +2053,7 @@ Product Description:
             result.secondary_features
         )
 
-
         st.rerun()
-
 
     # --------------------------------------------------------
     # HUMAN REVIEW
@@ -2241,6 +2232,12 @@ if st.session_state.analysis_started:
             ]
         )
 
+        nr_count = len(
+            result_df[
+                result_df["Relevance"] == "NR"
+            ]
+        )
+
 
         # ----------------------------------------------------
         # FRAMEWORK-ONLY COUNTS
@@ -2275,7 +2272,7 @@ if st.session_state.analysis_started:
         )
 
 
-        framework_nl_count = len(
+        framework_nr_count = len(
             result_df[
                 result_df[
                     "Relevance_Framework_Only"
@@ -2288,7 +2285,7 @@ if st.session_state.analysis_started:
         # SUMMARY METRICS
         # ====================================================
 
-        col1, col2, col3, col4 = st.columns(4)
+        col1, col2, col3, col4, col5 = st.columns(5)
 
 
         with col1:
@@ -2298,7 +2295,7 @@ if st.session_state.analysis_started:
                 <div class="info-card">
 
                     <div class="info-card-title">
-                        Patents
+                        Common Relevance Framework Results
                     </div>
 
                     <div class="info-card-value">
@@ -2365,6 +2362,27 @@ if st.session_state.analysis_started:
                 </div>
                 """
             )
+
+        with col5:
+            
+                        render_html(
+                            f"""
+                            <div class="info-card">
+            
+                                <div class="info-card-title">
+                                    NR
+                                </div>
+            
+                                <div class="info-card-value">
+                                    {nr_count}
+                                </div>
+            
+                            </div>
+                            """
+                        )
+            
+
+            
 
 
         # ====================================================
@@ -2468,7 +2486,7 @@ if st.session_state.analysis_started:
                     </div>
 
                     <div class="info-card-value">
-                        {framework_nl_count}
+                        {framework_nr_count}
                     </div>
 
                 </div>

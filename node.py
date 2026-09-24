@@ -232,7 +232,7 @@ class FeatureMatch(BaseModel):
 
 class DetailedAnalysisOutput(BaseModel):
     comparisons: list[FeatureMatch]
-    relevance: Literal["H", "M+", "L"]
+    relevance: Literal["H", "M+", "L", "NR"]
     rationale: str
     reasoning : str
     confidence: int = Field(ge=0, le=100)
@@ -700,10 +700,6 @@ For M+ or L, the reasoning must clearly answer:
 "What specific claim limitation or claim-related distinction is responsible for this rating?"
 
 """
-# ============================================================
-# 5. FINAL ANALYSIS
-# ============================================================
-
 # ============================================================
 # 5. FINAL ANALYSIS
 # ============================================================
