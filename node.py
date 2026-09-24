@@ -66,58 +66,58 @@ feature_parser = PydanticOutputParser(
     pydantic_object=FeatureExtraction
 )
 
-def extract_product_features(state: RelevanceState): 
+# def extract_product_features(state: RelevanceState): 
 
-    prompt = f"""
-You are an experienced patent analyst performing an FTO
-(Freedom-to-Operate) technical analysis.
+#     prompt = f"""
+# You are an experienced patent analyst performing an FTO
+# (Freedom-to-Operate) technical analysis.
 
-Extract the technical features explicitly disclosed in the
-product description.
+# Extract the technical features explicitly disclosed in the
+# product description.
 
-Classify every extracted feature into either PRIMARY or SECONDARY.
+# Classify every extracted feature into either PRIMARY or SECONDARY.
 
-PRIMARY FEATURES:
-- Core technical features and mechanisms.
-- Features important for satisfying potential patent claim
-  limitations.
-- Features that are important to the core technical concept.  
+# PRIMARY FEATURES:
+# - Core technical features and mechanisms.
+# - Features important for satisfying potential patent claim
+#   limitations.
+# - Features that are important to the core technical concept.  
 
-SECONDARY FEATURES:
-- Supporting or auxiliary features.
-- Features that are not central to the main technical operation.
+# SECONDARY FEATURES:
+# - Supporting or auxiliary features.
+# - Features that are not central to the main technical operation.
 
-Rules:
-- Extract only explicitly disclosed features.
-- Do not infer or invent features.
-- Keep features concise and technically specific.
-- One feature per list item.
+# Rules:
+# - Extract only explicitly disclosed features.
+# - Do not infer or invent features.
+# - Keep features concise and technically specific.
+# - One feature per list item.
 
-{feature_parser.get_format_instructions()}
+# {feature_parser.get_format_instructions()}
 
-PRODUCT DESCRIPTION:
-{state["product_description"]}
-"""
-    start = time.time()
-    response = llm.invoke(
-        [HumanMessage(content=prompt)]
-    )
-    print(
-        "Product feature extraction duration:",
-         time.time() - start
-    )
-    result = feature_parser.parse(response.content)
-    state["primary_product_features"] = result.primary_features
-    state["secondary_product_features"] = result.secondary_features
+# PRODUCT DESCRIPTION:
+# {state["product_description"]}
+# """
+#     start = time.time()
+#     response = llm.invoke(
+#         [HumanMessage(content=prompt)]
+#     )
+#     print(
+#         "Product feature extraction duration:",
+#          time.time() - start
+#     )
+#     result = feature_parser.parse(response.content)
+#     state["primary_product_features"] = result.primary_features
+#     state["secondary_product_features"] = result.secondary_features
 
-    approved = interrupt({
-        "review_type": "product",
-        "primary_features": result.primary_features,
-        "secondary_features": result.secondary_features
-    })
-    state["primary_product_features"] = approved["primary_features"]
-    state["secondary_product_features"] = approved["secondary_features"]
-    return state
+#     approved = interrupt({
+#         "review_type": "product",
+#         "primary_features": result.primary_features,
+#         "secondary_features": result.secondary_features
+#     })
+#     state["primary_product_features"] = approved["primary_features"]
+#     state["secondary_product_features"] = approved["secondary_features"]
+#     return state
 
 # 2. PATENT FEATURE EXTRACTION
 # ============================================================
