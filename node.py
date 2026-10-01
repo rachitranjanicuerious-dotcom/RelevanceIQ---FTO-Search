@@ -6,7 +6,7 @@ import time
 from typing import Literal
 from state import RelevanceState
 import pandas as pd
-from llm import llm
+from llm import llm,llm_2
 from pathlib import Path
 
 # Few-shot examples file
@@ -181,7 +181,7 @@ ALL CLAIMS:
 """
 
     start = time.time()
-    response = llm.invoke(
+    response = llm_2.invoke(
         [HumanMessage(content=prompt)]
     )
     print(
@@ -200,15 +200,6 @@ ALL CLAIMS:
         state["secondary_patent_features"] = []
 
         return state
-
-    # approved = interrupt({          
-    #     "review_type": "patent",
-    #     "publication_number": state["publication_number"],
-    #     "primary_features": result.primary_features,
-    #     "secondary_features": result.secondary_features
-    # })
-    # state["primary_patent_features"] = approved["primary_features"]
-    # state["secondary_patent_features"] = approved["secondary_features"]
 
     state["primary_patent_features"] = result.primary_features
     state["secondary_patent_features"] = result.secondary_features
@@ -384,9 +375,6 @@ INCOMPATIBLE.
 
 Do not infer absence solely because a limitation is not mentioned.
 
-Silence in a product description is evidence of uncertainty, not
-affirmative evidence of absence.
-
 ============================================================
 DO NOT INVENT PRODUCT FEATURES
 ============================================================
@@ -415,9 +403,7 @@ Potentially material limitations include:
 - a required sensor or input;
 - a required physical arrangement;
 - a required data relationship;
-- a required technical constraint; or
-- another limitation that materially distinguishes the claimed
-  technical solution.
+- a required technical constraint
 
 Do not automatically treat the following as material differences:
 - terminology;
@@ -446,8 +432,7 @@ Use technical equivalence carefully.
 Do NOT infer equivalence merely because:
 - the purpose is similar;
 - the products operate in the same field;
-- the result is broadly similar; or
-- the terminology sounds related.
+- the result is broadly similar
 
 Technical equivalence is a technical analytical concept only.
 Do not make or imply a legal Doctrine of Equivalents or infringement
@@ -573,16 +558,12 @@ Do not conclude that:
 - the patent is valid;
 - the patent is invalid;
 - the patent is enforceable;
-- the product is legally free to operate; or
-- the patent is legally unenforceable.
 
 Use technical screening language such as:
 - technically relevant;
 - potentially corresponding;
 - substantial technical overlap;
 - material distinction;
-- limitation not established;
-- limitation appears absent based on the available product evidence.
 
 ============================================================
 CONFIDENCE
@@ -832,8 +813,6 @@ The rationale must:
 - explain the technical relationship;
 - apply the user's relevance framework;
 - identify the most important material distinction where supported;
-- explain why the selected rating is preferred over the nearest
-  alternative.
 
 The rationale must be specific to the actual product and patent.
 
