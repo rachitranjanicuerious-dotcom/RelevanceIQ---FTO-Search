@@ -7,7 +7,7 @@ import pandas as pd
 from langgraph.types import Command
 from langchain_core.messages import HumanMessage
 
-from node import llm, llm_2, feature_parser
+from node import llm, feature_parser
 from graph import workflow
 from database import create_table, save_result
 import templates as ui
@@ -714,7 +714,7 @@ Product Description:
 """
 
 
-        response = llm_2.invoke(
+        response = llm.invoke(
             [
                 HumanMessage(
                     content=product_prompt

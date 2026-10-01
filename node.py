@@ -6,7 +6,7 @@ import time
 from typing import Literal
 from state import RelevanceState
 import pandas as pd
-from llm import llm,llm_2
+from llm import llm
 from pathlib import Path
 
 # Few-shot examples file
@@ -181,7 +181,7 @@ ALL CLAIMS:
 """
 
     start = time.time()
-    response = llm_2.invoke(
+    response = llm.invoke(
         [HumanMessage(content=prompt)]
     )
     print(
