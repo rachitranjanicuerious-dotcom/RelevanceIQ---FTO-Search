@@ -738,9 +738,9 @@ Perform this analysis independently as per the relevance framework provided by t
 Perform the complete claim-centric FTO analysis required by the common
 FTO methodology before assigning the Framework-Only rating.
 
-Prioritize correctly identifying H references and do not miss H merely
-because the product does not disclose every specific limitation of the
-claim.
+# Prioritize correctly identifying H references and do not miss H merely
+# because the product does not disclose every specific limitation of the
+# claim.
 
 Do not downgrade H to M+ or L solely because a product limitation is
 not explicitly stated. Do not treat silence as affirmative absence.

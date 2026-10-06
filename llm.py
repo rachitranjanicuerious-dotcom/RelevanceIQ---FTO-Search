@@ -15,14 +15,14 @@ openai_llm = ChatOpenAI(
     api_key=OPENAI_API_KEY
 )
 
-openai_llm2 = ChatOpenAI(
-    model="gpt-5.4-mini",
-    temperature=0,
-    seed=42,
-    api_key=OPENAI_API_KEY
-)
+# openai_llm2 = ChatOpenAI(
+#     model="gpt-5.4-mini",
+#     temperature=0,
+#     seed=42,
+#     api_key=OPENAI_API_KEY
+# )
 
 # Select the model to use
 llm = openai_llm
 
-llm_2 = openai_llm2
+# llm_2 = openai_llm2
