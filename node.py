@@ -1087,6 +1087,8 @@ undisclosed or uncertain.
 -------------------------------------------------------------
 NR - Non Relevant
 -------------------------------------------------------------
+The patent does not disclose or claim the primary features of the target product, or its claimed scope is substantially unrelated to the target product. 
+-------------------------------------------------------------
 
 ============================================================
 INPUTS
