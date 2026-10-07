@@ -228,9 +228,6 @@ Do not determine relevance from:
 - the patent title, the abstract, the general technical field, specification-only disclosure;
 - a simple count of matching product features.
 
-The title, abstract, specification, publication_number, and examples may be used to
-understand technical context, but they cannot replace the limitations
-of an actual claim.
 
 ============================================================
 CLAIM AS A COMPLETE COMBINATION
@@ -320,7 +317,7 @@ CRITICAL RULE:
 NOT DISCLOSED / UNCERTAIN is NOT the same as CONFIRMED ABSENT /
 INCOMPATIBLE.
 
-Do not infer absence solely because a limitation is not mentioned.
+Do not infer absence solely because a limitation is not mentioned or is routine.
 
 ============================================================
 DO NOT INVENT PRODUCT FEATURES
@@ -843,11 +840,6 @@ Return ONLY valid JSON.
     # ========================================================
     # DETAILED FTO ANALYSIS
     # ========================================================
-    #
-
-    # If the Framework-Only rating is supported by the detailed
-    
-    # ========================================================
 
     framework_only_rating = state.get(
         "relevance_framework_only",
@@ -936,7 +928,7 @@ Do NOT change the rating merely because:
 - a routine/conventional feature differs;
 - the Framework-Only rationale is less detailed than your analysis.
 
-Silence is NOT affirmative absence.
+Silence is NOT affirmative absence if it is very obvious or routine.
 ============================================================
 DETAILED RATING CALIBRATION
 ============================================================
@@ -1017,7 +1009,7 @@ A limitation should support an L rating only when it is technically
 meaningful and materially distinguishes the claimed solution.
 
 Do not assign L solely because one or more product details are
-undisclosed or uncertain.
+undisclosed or uncertain or routine.
 
 -------------------------------------------------------------
 NR - Non Relevant
@@ -1123,7 +1115,7 @@ After completing the detailed analysis:
   exactly the same rating.
 - If the Framework-Only rating is not supported because of a material
   claim-supported distinction identified by the detailed analysis,
-  correct `relevance`. The corrected relevance can be anything H, M+, L, NR whatever the detailed analysis says. 
+  correct `relevance`. The corrected relevance can be any one of H, M+, L, NR whatever the detailed analysis finds accurate (not just one rating below or above). 
 - The final `relevance` must be exactly one of:
 
 H
