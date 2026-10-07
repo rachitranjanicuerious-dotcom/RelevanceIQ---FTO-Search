@@ -3,7 +3,7 @@ from typing import TypedDict
 class RelevanceState(TypedDict) :
     # product description
     product_description : str
-
+    
     # input from thr excel sheet rows
     publication_number  : str
     title   : str
@@ -15,13 +15,8 @@ class RelevanceState(TypedDict) :
     primary_product_features : list[str]
     secondary_product_features : list[str]
 
-    
     primary_patent_features : list[str]
     secondary_patent_features : list[str]
-
-    # Extracted features
-    # product_features : list[str]
-    # patent_features : list[str]
 
     # User-provided framework
     relevance_framework : str

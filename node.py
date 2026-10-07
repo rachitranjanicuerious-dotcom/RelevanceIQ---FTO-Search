@@ -66,58 +66,6 @@ feature_parser = PydanticOutputParser(
     pydantic_object=FeatureExtraction
 )
 
-# def extract_product_features(state: RelevanceState): 
-
-#     prompt = f"""
-# You are an experienced patent analyst performing an FTO
-# (Freedom-to-Operate) technical analysis.
-
-# Extract the technical features explicitly disclosed in the
-# product description.
-
-# Classify every extracted feature into either PRIMARY or SECONDARY.
-
-# PRIMARY FEATURES:
-# - Core technical features and mechanisms.
-# - Features important for satisfying potential patent claim
-#   limitations.
-# - Features that are important to the core technical concept.  
-
-# SECONDARY FEATURES:
-# - Supporting or auxiliary features.
-# - Features that are not central to the main technical operation.
-
-# Rules:
-# - Extract only explicitly disclosed features.
-# - Do not infer or invent features.
-# - Keep features concise and technically specific.
-# - One feature per list item.
-
-# {feature_parser.get_format_instructions()}
-
-# PRODUCT DESCRIPTION:
-# {state["product_description"]}
-# """
-#     start = time.time()
-#     response = llm.invoke(
-#         [HumanMessage(content=prompt)]
-#     )
-#     print(
-#         "Product feature extraction duration:",
-#          time.time() - start
-#     )
-#     result = feature_parser.parse(response.content)
-#     state["primary_product_features"] = result.primary_features
-#     state["secondary_product_features"] = result.secondary_features
-
-#     approved = interrupt({
-#         "review_type": "product",
-#         "primary_features": result.primary_features,
-#         "secondary_features": result.secondary_features
-#     })
-#     state["primary_product_features"] = approved["primary_features"]
-#     state["secondary_product_features"] = approved["secondary_features"]
-#     return state
 
 # 2. PATENT FEATURE EXTRACTION
 # ============================================================
@@ -132,7 +80,6 @@ Extract technical features from the patent claims.
 SOURCE PRIORITY:
 1. Independent Claim — identify core mandatory limitations.
 2. All Claims — identify additional dependent-claim limitations.
-3. Abstract and Title —  these are for context only.
 
 Classify every extracted technical feature into PRIMARY or SECONDARY.
 
@@ -338,8 +285,8 @@ For example, do not take:
 - D from Claim 5
 
 and treat A+B+C+D as one claimed combination.
-Every relevance conclusion must be traceable to an actual claim.
 
+Every relevance conclusion must be traceable to an actual claim.
 ============================================================
 PRODUCT EVIDENCE CLASSIFICATION
 ============================================================
@@ -455,13 +402,6 @@ The analysis should focus on whether the product corresponds to
 the claimed technical combination. The product can have additional features, the anlysis has to be on whether the claimed patent features are in the product.
 
 ============================================================
-SPECIFICATION AND ABSTRACT
-============================================================
-
-The specification, examples, abstract, and title are used only to
-understand the context and not for analysis.
-
-============================================================
 CLAIM-BY-CLAIM ANALYSIS PROCESS
 ============================================================
 
@@ -557,7 +497,6 @@ Do not conclude that:
 - the product does not infringe;
 - the patent is valid;
 - the patent is invalid;
-- the patent is enforceable;
 
 Use technical screening language such as:
 - technically relevant;
@@ -666,7 +605,7 @@ The reasoning field explains why the final relevance rating is M+ or L under the
 If the final relevance rating is H:
 - Return an empty string "" for the reasoning field.
 
-If the final relevance rating is NR (in case of framework_only_analysis):
+If the final relevance rating is NR 
 - Return an empty string "" for the reasoning field.
 
 If the final relevance rating is M+ or L:
@@ -791,6 +730,7 @@ Identify the strongest actual claim or claims relevant to the product.
 
 Perform the complete claim analysis according to the FTO
 methodology.
+
 Then apply the USER-PROVIDED RELEVANCE FRAMEWORK to determine the
 final rating.
 
@@ -907,16 +847,9 @@ Return ONLY valid JSON.
     # DETAILED FTO ANALYSIS
     # ========================================================
     #
-    # The detailed analysis now runs AFTER the Framework-Only
-    # analysis.
-    # It receives the Framework-Only result and acts as the
-    # validation/correction stage:
     
     # If the Framework-Only rating is supported by the detailed
-    # FTO analysis, state["relevance"] remains the same.
-    # If the detailed FTO analysis identifies a material reason 
-    # why that rating is incorrect, state["relevance"] is changed.
-
+    
     # ========================================================
 
     framework_only_rating = state.get(
@@ -1191,9 +1124,6 @@ must NOT be overwritten by this analysis.
 
 The rationale must explain the FINAL detailed rating, not merely repeat
 the Framework-Only rationale.
-
-# The reasoning must explain whether the Framework-Only rating was
-# confirmed or corrected and why.
 
 ============================================================
 OUTPUT
