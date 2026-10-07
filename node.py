@@ -545,8 +545,6 @@ The rationale must:
 - explain the technical correspondence;
 - identify important material distinctions where supported;
 - distinguish uncertainty from confirmed absence;
-- explain why the selected rating is preferred over the nearest
-  alternative.
 
 Avoid generic statements such as:
 
@@ -677,12 +675,11 @@ Perform this analysis independently as per the relevance framework provided by t
 Perform the complete claim-centric FTO analysis required by the common
 FTO methodology before assigning the Framework-Only rating.
 
-# Prioritize correctly identifying H references and do not miss H merely
-# because the product does not disclose every specific limitation of the
-# claim.
+# Do not downgrade H to M+ or L solely because a product limitation is
+# not explicitly stated. Do not treat silence as affirmative absence.
 
-Do not downgrade H to M+ or L solely because a product limitation is
-not explicitly stated. Do not treat silence as affirmative absence.
+Do not downgrade H merely because a minor, routine, contextual, or
+implementation-specific product limitation is not explicitly stated.
 
 ============================================================
 INPUTS
@@ -847,7 +844,7 @@ Return ONLY valid JSON.
     # DETAILED FTO ANALYSIS
     # ========================================================
     #
-    
+
     # If the Framework-Only rating is supported by the detailed
     
     # ========================================================
@@ -969,12 +966,17 @@ H can still be appropriate when some claim details are:
 - routine technical details;
 - not disclosed but are obvious in that context
 
-Do not require the product description to reproduce every claim detail
+Do not require the product description to reproduce every minor/ routine claim detail
 before assigning H.
 
 However, do not assign H when the product evidence clearly establishes
 that a material limitation required by the relevant claim is absent or
 technically incompatible.
+
+# Added
+
+An important limitation that is NOT DISCLOSED / UNCERTAIN may prevent H
+when that limitation materially narrows the claimed technical solution.
 
 ------------------------------------------------------------
 M+ — RELEVANT
@@ -1020,7 +1022,17 @@ undisclosed or uncertain.
 -------------------------------------------------------------
 NR - Non Relevant
 -------------------------------------------------------------
-The patent does not disclose or claim the primary features of the target product, or its claimed scope is substantially unrelated to the target product. 
+
+Assign NR only when the patent claims do not meaningfully correspond to any
+primary technical feature or core technical functionality of the product.
+
+If an actual claim shares a meaningful primary product functionality or
+technical architecture but also contains material limitations that the
+product does not establish, the rating should generally be M+ or L rather
+than NR, depending on the degree of technical overlap.
+
+NR should be reserved for cases where the strongest actual claims are
+substantially unrelated to the product's primary technical functionality.
 -------------------------------------------------------------
 
 ============================================================
@@ -1111,7 +1123,7 @@ After completing the detailed analysis:
   exactly the same rating.
 - If the Framework-Only rating is not supported because of a material
   claim-supported distinction identified by the detailed analysis,
-  correct `relevance`.
+  correct `relevance`. The corrected relevance can be anything H, M+, L, NR whatever the detailed analysis says. 
 - The final `relevance` must be exactly one of:
 
 H
